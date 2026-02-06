@@ -1,0 +1,178 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Azure.CreateUIDef",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "config": {
+      "isWizard": true,
+      "basics": {
+        "description": "Deploy your own private AI assistant powered by Anthropic Claude. It runs on a secure Azure VM with automatic HTTPS.",
+        "location": {
+          "visible": true,
+          "resourceTypes": ["Microsoft.Compute/virtualMachines"]
+        }
+      }
+    },
+    "basics": [
+      {
+        "name": "infoBox",
+        "type": "Microsoft.Common.InfoBox",
+        "visible": true,
+        "options": {
+          "text": "You're deploying your own private AI assistant! Just pick a name and region, then click Next.",
+          "style": "Info"
+        }
+      },
+      {
+        "name": "appName",
+        "type": "Microsoft.Common.TextBox",
+        "label": "App Name",
+        "toolTip": "Short name for your bot (3-12 characters, letters and numbers only). This becomes part of your VM's URL.",
+        "placeholder": "mybot",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-zA-Z][a-zA-Z0-9]{2,11}$",
+          "validationMessage": "Must be 3-12 characters, start with a letter, letters and numbers only."
+        }
+      }
+    ],
+    "steps": [
+      {
+        "name": "llmKeys",
+        "label": "AI Provider",
+        "elements": [
+          {
+            "name": "infoBox",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "text": "Your bot is powered by Anthropic Claude. You need an API key to continue. <a href='https://console.anthropic.com/settings/keys' target='_blank'>Get your API key here</a> (sign up if you don't have an account).",
+              "style": "Info"
+            }
+          },
+          {
+            "name": "anthropicApiKey",
+            "type": "Microsoft.Common.PasswordBox",
+            "label": {
+              "password": "Anthropic API Key"
+            },
+            "toolTip": "Claude API key from console.anthropic.com (must start with sk-ant-)",
+            "constraints": {
+              "required": true,
+              "regex": "^sk-ant-.{10,}$",
+              "validationMessage": "Must start with 'sk-ant-' and be at least 17 characters."
+            },
+            "options": {
+              "hideConfirmation": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "messaging",
+        "label": "Telegram Setup",
+        "elements": [
+          {
+            "name": "infoBox",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "text": "You'll chat with your AI assistant through Telegram. To set up: 1) Open Telegram and search for <b>@BotFather</b>, 2) Send <b>/newbot</b> and follow the prompts, 3) Copy the token it gives you and paste it below. <a href='https://github.com/aerolalit/openclaw-azure#telegram-setup' target='_blank'>Detailed guide</a>",
+              "style": "Info"
+            }
+          },
+          {
+            "name": "telegramBotToken",
+            "type": "Microsoft.Common.PasswordBox",
+            "label": {
+              "password": "Telegram Bot Token (e.g., 123456789:ABCdef...)"
+            },
+            "toolTip": "Bot token from @BotFather on Telegram. Format: 123456789:ABCdef1234567890abcdef1234567890ABC",
+            "constraints": {
+              "required": false,
+              "regex": "^$|^[0-9]+:.+$",
+              "validationMessage": "Must be in format: 123456789:ABCdef... (get it from @BotFather on Telegram)"
+            },
+            "options": {
+              "hideConfirmation": true
+            }
+          },
+          {
+            "name": "telegramUserId",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Telegram User ID (e.g., 455368171)",
+            "toolTip": "Your numeric Telegram user ID for automatic bot pairing. Message @userinfobot on Telegram to get it.",
+            "placeholder": "e.g., 455368171",
+            "defaultValue": "",
+            "constraints": {
+              "required": false,
+              "regex": "^$|^[0-9]+$",
+              "validationMessage": "Must be a numeric ID (e.g., 455368171). Message @userinfobot on Telegram to get yours."
+            }
+          }
+        ]
+      },
+      {
+        "name": "security",
+        "label": "Security & Backup",
+        "elements": [
+          {
+            "name": "infoBox",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "text": "Your bot is protected by IP restriction — only your IP address can access it. Visit <a href='https://api.ipify.org' target='_blank'>api.ipify.org</a> to find your public IP and paste it below.",
+              "style": "Info"
+            }
+          },
+          {
+            "name": "allowedIpAddresses",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Your IP Address",
+            "toolTip": "Your public IP for secure access. Visit https://api.ipify.org to find it. Multiple IPs: comma-separated.",
+            "placeholder": "203.0.113.1",
+            "constraints": {
+              "required": true,
+              "regex": "^[0-9.,\\s]+$",
+              "validationMessage": "Enter a valid IP address (e.g., 203.0.113.1). Visit https://api.ipify.org to find yours."
+            }
+          },
+          {
+            "name": "vmSize",
+            "type": "Microsoft.Compute.SizeSelector",
+            "label": "VM Size",
+            "toolTip": "Choose the VM size based on your workload and budget.",
+            "recommendedSizes": [
+              "Standard_B1ms",
+              "Standard_B1s",
+              "Standard_B2s"
+            ],
+            "osPlatform": "Linux",
+            "imageReference": {
+              "publisher": "Canonical",
+              "offer": "0001-com-ubuntu-server-jammy",
+              "sku": "22_04-lts-gen2"
+            },
+            "count": 1
+          },
+          {
+            "name": "enableBackup",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Enable daily VM backups (+$5-10/month)",
+            "toolTip": "Back up your VM daily using Azure Recovery Services. Recommended for production."
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "appName": "[basics('appName')]",
+      "location": "[location()]",
+      "anthropicApiKey": "[steps('llmKeys').anthropicApiKey]",
+      "telegramBotToken": "[steps('messaging').telegramBotToken]",
+      "telegramUserId": "[steps('messaging').telegramUserId]",
+      "allowedIpAddresses": "[steps('security').allowedIpAddresses]",
+      "vmSize": "[steps('security').vmSize]",
+      "enableBackup": "[steps('security').enableBackup]"
+    }
+  }
+}

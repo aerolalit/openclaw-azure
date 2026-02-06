@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName": {
+      "value": "myopenclaw"
+    },
+    "location": {
+      "value": "westeurope"
+    },
+    "anthropicApiKey": {
+      "value": ""
+    },
+    "telegramBotToken": {
+      "value": ""
+    },
+    "telegramUserId": {
+      "value": ""
+    },
+    "allowedIpAddresses": {
+      "value": ""
+    },
+    "enableBackup": {
+      "value": false
+    }
+  }
+}

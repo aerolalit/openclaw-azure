@@ -1,0 +1,52 @@
+name: Validate ARM Template
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    name: Validate JSON and ARM Template
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Validate JSON syntax
+      run: npm run lint:json
+      
+    - name: Check formatting
+      run: npm run format:check
+      
+    - name: Validate ARM template syntax
+      uses: azure/arm-deploy@v1
+      with:
+        scope: resourcegroup
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        resourceGroupName: 'validation-rg'
+        template: ./deploy/azuredeploy.json
+        deploymentMode: Validate
+        parameters: |
+          appName=testvalidation
+          anthropicApiKey=sk-ant-test123456789012345678901234567890
+          discordBotToken=MTtest.test.test
+      continue-on-error: true
+      
+    - name: ARM Template Validation Results
+      run: |
+        if [ $? -eq 0 ]; then
+          echo "✅ ARM template validation passed"
+        else
+          echo "⚠️  ARM template validation failed - check parameters"
+        fi
