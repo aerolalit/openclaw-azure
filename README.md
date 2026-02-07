@@ -6,11 +6,14 @@ Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on Azu
 
 ## ✨ What You Get
 
-- 🤖 **Private AI Bot** for Discord or Telegram powered by Claude AI
-- 🔒 **Secure** - Your API keys stored in Azure Key Vault
+- 🤖 **Private AI Bot** for Discord, Telegram, Slack, or WhatsApp powered by Claude AI
+- 🧠 **Multi-AI Support** - Anthropic Claude (required) + optional OpenAI, Groq, Cohere
+- 🎙️ **Voice Features** - Optional ElevenLabs integration for text-to-speech
+- 🔒 **Secure** - All API keys stored in Azure Key Vault with enhanced validation
 - 💰 **Cost-Optimized** - Approximately $20-30/month
 - ⚡ **One-Click Deploy** - No coding or DevOps knowledge required
 - 📊 **Persistent Storage** - Your conversations and data are saved
+- 🔗 **Extensible** - GitHub, Notion, and webhook integrations available
 
 ## 🎯 Quick Start
 
@@ -18,11 +21,21 @@ Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on Azu
 
 You'll need:
 1. **Azure Account** ([sign up free](https://azure.microsoft.com/free))
-2. **Bot Token** - Choose at least one:
-   - **Discord Bot Token** ([setup guide](#discord-setup)) OR
-   - **Telegram Bot Token** ([setup guide](#telegram-setup)) OR
-   - **Both** (if you want your bot on both platforms!)
-3. **Anthropic API Key** ([get yours here](https://console.anthropic.com))
+2. **Messaging Platform Token** - Choose at least one:
+   - **Discord Bot Token** ([setup guide](#discord-setup))
+   - **Telegram Bot Token** ([setup guide](#telegram-setup)) 
+   - **Slack Bot Token** (see documentation)
+   - **WhatsApp Business Token** (see documentation)
+3. **Anthropic API Key** ([get yours here](https://console.anthropic.com)) - **Required**
+
+### Optional Enhancements
+- **OpenAI API Key** - For GPT models and image generation
+- **ElevenLabs API Key** - For text-to-speech and voice cloning
+- **GitHub Token** - For repository interactions
+- **Notion API Key** - For workspace integrations
+- **Groq API Key** - For fast AI inference
+- **Cohere API Key** - For additional AI models
+- **Brave Search API** - For enhanced web search
 
 ### Deploy to Azure
 
@@ -114,17 +127,55 @@ Estimated monthly costs (US East region):
 
 ## 🔧 Deployment Parameters
 
+The deployment form is now organized into clear sections:
+
+### 🤖 Bot Configuration
 | Parameter | Description | Example |
 |-----------|-------------|---------|
 | **App Name** | Short name for your bot (3-12 chars) | `mybot` |
-| **Discord Token** | From Discord Developer Portal (leave empty if using Telegram only) | `MTEyMz...` |
-| **Telegram Token** | From Telegram @BotFather (leave empty if using Discord only) | `123456789:ABC...` |
-| **Anthropic Key** | From Anthropic Console | `sk-ant-api-...` |
+| **Confirm Tokens** | Required safety check | ✅ Check this box |
+
+### 🤝 Messaging Platform Tokens (At least one required)
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| **Discord Token** | From Discord Developer Portal | `MTEyMz...` |
+| **Telegram Token** | From Telegram @BotFather | `123456789:ABC...` |
+| **Slack Token** | From Slack app (optional) | `xoxb-...` |
+| **WhatsApp Token** | Business API token (optional) | Various formats |
+
+### 🧠 AI/LLM API Keys
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| **Anthropic Key** | **REQUIRED** - From Anthropic Console | `sk-ant-api03-...` |
+| **OpenAI Key** | Optional - For GPT models | `sk-...` |
+| **Groq Key** | Optional - For fast inference | `gsk_...` |
+| **Cohere Key** | Optional - Additional AI models | Various formats |
+
+### 🌐 External Service Tokens (All optional)
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| **ElevenLabs Key** | For text-to-speech | Various formats |
+| **Brave Search Key** | Enhanced web search | Various formats |
+| **GitHub Token** | Repository interactions | `ghp_...` |
+| **Notion Key** | Workspace integrations | `secret_...` |
+
+### 🔗 Gateway & Federation (Advanced)
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| **Gateway Token** | Multi-instance federation | Various formats |
+| **Webhook Secret** | Incoming webhook auth | Various formats |
+
+### ⚙️ Infrastructure Settings
+| Parameter | Description | Example |
+|-----------|-------------|---------|
 | **CPU** | Container CPU allocation | `1.0` (recommended) |
 | **Memory** | Container memory allocation | `2Gi` (recommended) |
 | **Log Retention** | How long to keep logs | `30` days |
 
-**⚠️ Important:** You must provide at least one bot token (Discord OR Telegram). You can also provide both if you want your bot on both platforms!
+**⚠️ Important:** 
+- At least one messaging platform token is required
+- Anthropic API key is required and must start with `sk-ant-`
+- All other tokens are optional but enable additional features
 
 ---
 
@@ -164,8 +215,13 @@ Estimated monthly costs (US East region):
 **Form validation errors?**
 - **Discord Token**: Should be ~59 characters, starts with `MT` or `MQ`
 - **Telegram Token**: Should be ~45 characters, format `123456789:ABCdef...`
-- **Anthropic Key**: Should start with `sk-ant-` (various formats: sk-ant-api03-, sk-ant-oat01-, etc.)
-- **⚠️ Must provide at least one bot token** (Discord OR Telegram)
+- **Slack Token**: Should start with `xoxb-` for bot tokens
+- **Anthropic Key**: **REQUIRED** - Must start with `sk-ant-` (api03-, oat01-, etc.)
+- **OpenAI Key**: Should start with `sk-` (if provided)
+- **Groq Key**: Should start with `gsk_` (if provided) 
+- **GitHub Token**: Should start with `ghp_` (if provided)
+- **Notion Key**: Should start with `secret_` (if provided)
+- **⚠️ Must check confirmation box** and provide at least one messaging platform token
 - If you see validation errors, check the "Errors" panel on the right →
 
 **Deployment failed?**
@@ -192,6 +248,16 @@ After deployment, you'll get a Container App URL. This provides:
 Your bot's data is stored in Azure Storage. To backup:
 1. Download files from the storage account
 2. Redeploy if needed and upload files back
+
+### Token Organization
+The deployment template now features improved organization:
+- **Visual grouping** with clear sections and emoji headers
+- **Enhanced validation** with format checking for all token types
+- **Comprehensive support** for 10+ services out of the box
+- **Security-first design** with all secrets stored in Azure Key Vault
+- **Future-proof structure** for easy addition of new integrations
+
+See [TOKEN-ORGANIZATION.md](./TOKEN-ORGANIZATION.md) for detailed documentation.
 
 ---
 
