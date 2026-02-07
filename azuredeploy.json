@@ -2,15 +2,15 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "metadata": {
-    "description": "Deploy OpenClaw AI Assistant to Azure Container Apps"
+    "description": "Deploy your own OpenClaw AI Assistant to Azure. Creates a private Discord bot powered by Claude AI. Cost estimate: $20-30/month. Requires Discord bot token and Anthropic API key."
   },
   "parameters": {
     "appName": {
       "type": "string",
       "minLength": 3,
-      "maxLength": 32,
+      "maxLength": 12,
       "metadata": {
-        "description": "Name for your OpenClaw instance (letters and numbers only)"
+        "description": "Short name for your OpenClaw instance (3-12 chars, letters and numbers only). Example: 'mybot' or 'assistant1'"
       }
     },
     "location": {
@@ -22,14 +22,16 @@
     },
     "discordBotToken": {
       "type": "securestring",
+      "minLength": 50,
       "metadata": {
-        "description": "Discord bot token (starts with MT or MQ)"
+        "description": "Discord bot token from Discord Developer Portal. Should start with 'MT' or 'MQ' and be about 59 characters long."
       }
     },
     "anthropicApiKey": {
       "type": "securestring",
+      "minLength": 40,
       "metadata": {
-        "description": "Anthropic Claude API key (starts with sk-ant-)"
+        "description": "Anthropic Claude API key from https://console.anthropic.com. Should start with 'sk-ant-api-' and be about 100+ characters long."
       }
     },
     "containerCpu": {
@@ -53,13 +55,27 @@
         "4Gi"
       ],
       "metadata": {
-        "description": "Memory allocation for the container"
+        "description": "Memory allocation for the container (2Gi recommended for most use cases)"
+      }
+    },
+    "logRetentionDays": {
+      "type": "int",
+      "defaultValue": 30,
+      "allowedValues": [
+        7,
+        14,
+        30,
+        60,
+        90
+      ],
+      "metadata": {
+        "description": "How long to keep logs in days. Lower values reduce costs. (30 days recommended)"
       }
     }
   },
   "variables": {
-    "keyVaultName": "[concat(parameters('appName'), '-kv-', uniqueString(resourceGroup().id))]",
-    "storageAccountName": "[toLower(concat(parameters('appName'), 'st', uniqueString(resourceGroup().id)))]",
+    "keyVaultName": "[concat(take(parameters('appName'), 8), '-kv-', take(uniqueString(resourceGroup().id), 10))]",
+    "storageAccountName": "[toLower(concat(take(parameters('appName'), 8), take(uniqueString(resourceGroup().id), 15)))]",
     "containerAppName": "[concat(parameters('appName'), '-app')]",
     "containerEnvironmentName": "[concat(parameters('appName'), '-env')]",
     "logAnalyticsName": "[concat(parameters('appName'), '-logs')]",
@@ -78,7 +94,7 @@
       "name": "[variables('logAnalyticsName')]",
       "location": "[parameters('location')]",
       "properties": {
-        "retentionInDays": 30,
+        "retentionInDays": "[parameters('logRetentionDays')]",
         "sku": {
           "name": "PerGB2018"
         }
@@ -313,19 +329,38 @@
   "outputs": {
     "containerAppUrl": {
       "type": "string",
-      "value": "[concat('https://', reference(resourceId('Microsoft.App/containerApps', variables('containerAppName'))).configuration.ingress.fqdn)]"
+      "value": "[concat('https://', reference(resourceId('Microsoft.App/containerApps', variables('containerAppName'))).configuration.ingress.fqdn)]",
+      "metadata": {
+        "description": "Your OpenClaw web interface URL (for monitoring and logs)"
+      }
     },
     "resourceGroupName": {
       "type": "string",
-      "value": "[resourceGroup().name]"
+      "value": "[resourceGroup().name]",
+      "metadata": {
+        "description": "Azure Resource Group containing your OpenClaw resources"
+      }
     },
     "keyVaultName": {
       "type": "string",
-      "value": "[variables('keyVaultName')]"
+      "value": "[variables('keyVaultName')]",
+      "metadata": {
+        "description": "Azure Key Vault storing your bot tokens securely"
+      }
     },
     "storageAccountName": {
       "type": "string",
-      "value": "[variables('storageAccountName')]"
+      "value": "[variables('storageAccountName')]",
+      "metadata": {
+        "description": "Azure Storage Account for your bot's workspace and data"
+      }
+    },
+    "discordBotInstructions": {
+      "type": "string",
+      "value": "Your OpenClaw bot is starting up! It may take 2-3 minutes to be ready. Check your Discord server - the bot should appear online. If not, see troubleshooting docs.",
+      "metadata": {
+        "description": "Next steps after deployment"
+      }
     }
   }
 }
