@@ -22,8 +22,9 @@
     },
     "discordBotToken": {
       "type": "securestring",
+      "defaultValue": "",
       "metadata": {
-        "description": "Discord bot token from Discord Developer Portal. Should start with 'MT' or 'MQ' and be about 59 characters long."
+        "description": "Discord bot token from Discord Developer Portal. Leave empty to use Telegram instead. Should start with 'MT' or 'MQ' and be about 59 characters long."
       }
     },
     "anthropicApiKey": {
@@ -84,9 +85,37 @@
     "containerAppName": "[concat(parameters('appName'), '-app')]",
     "containerEnvironmentName": "[concat(parameters('appName'), '-env')]",
     "logAnalyticsName": "[concat(parameters('appName'), '-logs')]",
-    "managedIdentityName": "[concat(parameters('appName'), '-identity')]"
+    "managedIdentityName": "[concat(parameters('appName'), '-identity')]",
+    "hasDiscordToken": "[not(equals(parameters('discordBotToken'), ''))]",
+    "hasTelegramToken": "[not(equals(parameters('telegramBotToken'), ''))]",
+    "hasAtLeastOneToken": "[or(variables('hasDiscordToken'), variables('hasTelegramToken'))]"
   },
   "resources": [
+    {
+      "condition": "[not(variables('hasAtLeastOneToken'))]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "validation-error",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2021-06-01",
+              "name": "ERROR-You-must-provide-either-Discord-or-Telegram-token",
+              "location": "[parameters('location')]",
+              "kind": "StorageV2",
+              "sku": {
+                "name": "Standard_LRS"
+              }
+            }
+          ]
+        }
+      }
+    },
     {
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
       "apiVersion": "2023-01-31",
@@ -169,7 +198,7 @@
         "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
       ],
       "properties": {
-        "value": "[parameters('discordBotToken')]"
+        "value": "[if(equals(parameters('discordBotToken'), ''), 'NOT_CONFIGURED', parameters('discordBotToken'))]"
       }
     },
     {
