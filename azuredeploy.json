@@ -244,6 +244,7 @@
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.App/managedEnvironments', variables('containerEnvironmentName'))]",
+        "[resourceId('Microsoft.App/managedEnvironments/storages', variables('containerEnvironmentName'), 'workspace-storage')]",
         "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'discord-token')]",
         "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'anthropic-key')]",
         "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'storage-key')]"
