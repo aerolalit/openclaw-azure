@@ -29,9 +29,10 @@
     },
     "anthropicApiKey": {
       "type": "securestring",
-      "minLength": 50,
+      "minLength": 58,
+      "maxLength": 65,
       "metadata": {
-        "description": "Anthropic Claude API key from https://console.anthropic.com. Must start with 'sk-ant-api-' and be at least 50 characters long."
+        "description": "Anthropic Claude API key from https://console.anthropic.com. Must start with 'sk-ant-api03-' and be exactly ~60 characters long."
       }
     },
     "telegramBotToken": {
