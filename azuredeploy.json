@@ -5,6 +5,10 @@
     "description": "Deploy your own OpenClaw AI Assistant to Azure. Creates a private Discord or Telegram bot powered by Claude AI. Cost estimate: $20-30/month. Requires bot token (Discord or Telegram) and Anthropic API key."
   },
   "parameters": {
+    "//": "═══════════════════════════════════════════════════════════",
+    "_comment1": "🤖 BOT CONFIGURATION",
+    "//": "═══════════════════════════════════════════════════════════",
+    
     "appName": {
       "type": "string",
       "minLength": 3,
@@ -13,25 +17,23 @@
         "description": "Short name for your OpenClaw instance (3-12 chars, letters and numbers only). Example: 'mybot' or 'assistant1'"
       }
     },
-    "location": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().location]",
+    "confirmTokensProvided": {
+      "type": "bool",
+      "defaultValue": false,
       "metadata": {
-        "description": "Azure region for deployment"
+        "description": "⚠️ REQUIRED CONFIRMATION: Check this box to confirm you have provided either Discord token OR Telegram token below. Your bot will NOT work without at least one token!"
       }
     },
+    
+    "//": "═══════════════════════════════════════════════════════════",
+    "_comment2": "🤝 MESSAGING PLATFORM TOKENS",
+    "//": "═══════════════════════════════════════════════════════════",
+    
     "discordBotToken": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
         "description": "Discord bot token from Discord Developer Portal. REQUIRED if not using Telegram. Should start with 'MT' or 'MQ' and be ~59 characters long. Leave empty ONLY if using Telegram."
-      }
-    },
-    "anthropicApiKey": {
-      "type": "securestring",
-      "minLength": 20,
-      "metadata": {
-        "description": "Anthropic Claude API key from console.anthropic.com or CLI setup-token. Must start with 'sk-ant-' (e.g., sk-ant-api03- or sk-ant-oat01-). Variable length depending on token type."
       }
     },
     "telegramBotToken": {
@@ -41,11 +43,115 @@
         "description": "Telegram bot token from @BotFather. REQUIRED if not using Discord. Format: numbers:letters (like 123456789:ABCdef...). Leave empty ONLY if using Discord."
       }
     },
-    "confirmBotTokenProvided": {
-      "type": "bool",
-      "defaultValue": false,
+    "slackBotToken": {
+      "type": "securestring",
+      "defaultValue": "",
       "metadata": {
-        "description": "⚠️ REQUIRED CONFIRMATION: Check this box to confirm you have provided either Discord token OR Telegram token above. Your bot will NOT work without at least one token!"
+        "description": "OPTIONAL: Slack bot token (xoxb-...) from your Slack app. Leave empty if not using Slack integration."
+      }
+    },
+    "whatsappToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: WhatsApp Business API token. Leave empty if not using WhatsApp integration."
+      }
+    },
+    
+    "//": "═══════════════════════════════════════════════════════════",
+    "_comment3": "🧠 AI/LLM API KEYS",
+    "//": "═══════════════════════════════════════════════════════════",
+    
+    "anthropicApiKey": {
+      "type": "securestring",
+      "minLength": 20,
+      "metadata": {
+        "description": "🔑 REQUIRED: Anthropic Claude API key from console.anthropic.com. Must start with 'sk-ant-' (e.g., sk-ant-api03-...). This is your primary AI model."
+      }
+    },
+    "openaiApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: OpenAI API key (sk-...) for additional AI capabilities, image generation, or fallback. Leave empty if not needed."
+      }
+    },
+    "groqApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Groq API key (gsk_...) for fast inference. Leave empty if not needed."
+      }
+    },
+    "cohereApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Cohere API key for additional AI models. Leave empty if not needed."
+      }
+    },
+    
+    "//": "═══════════════════════════════════════════════════════════",
+    "_comment4": "🌐 EXTERNAL SERVICE TOKENS",
+    "//": "═══════════════════════════════════════════════════════════",
+    
+    "elevenlabsApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: ElevenLabs API key for text-to-speech/voice cloning. Leave empty if not using voice features."
+      }
+    },
+    "braveSearchApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Brave Search API key for web search capabilities. Leave empty to use default search."
+      }
+    },
+    "githubToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: GitHub Personal Access Token (ghp_...) for repository interactions. Leave empty if not needed."
+      }
+    },
+    "notionApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Notion API key (secret_...) for Notion integrations. Leave empty if not using Notion."
+      }
+    },
+    
+    "//": "═══════════════════════════════════════════════════════════",
+    "_comment5": "🔗 GATEWAY & FEDERATION TOKENS",
+    "//": "═══════════════════════════════════════════════════════════",
+    
+    "gatewayToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Clawdbot Gateway federation token for connecting multiple instances. Leave empty for standalone deployment."
+      }
+    },
+    "webhookSecret": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Webhook authentication secret for incoming integrations. Leave empty if not using webhooks."
+      }
+    },
+    
+    "//": "═══════════════════════════════════════════════════════════",
+    "_comment6": "⚙️ INFRASTRUCTURE SETTINGS",
+    "//": "═══════════════════════════════════════════════════════════",
+    
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Azure region for deployment"
       }
     },
     "containerCpu": {
@@ -94,10 +200,29 @@
     "containerEnvironmentName": "[concat(variables('validatedAppName'), '-env')]",
     "logAnalyticsName": "[concat(variables('validatedAppName'), '-logs')]",
     "managedIdentityName": "[concat(variables('validatedAppName'), '-identity')]",
+    
+    "_comment": "Messaging platform token validation",
     "hasDiscordToken": "[not(equals(parameters('discordBotToken'), ''))]",
     "hasTelegramToken": "[not(equals(parameters('telegramBotToken'), ''))]",
-    "hasAtLeastOneToken": "[or(variables('hasDiscordToken'), variables('hasTelegramToken'))]",
-    "validatedAppName": "[if(parameters('confirmBotTokenProvided'), parameters('appName'), 'ERROR-Must-confirm-bot-tokens-provided')]"
+    "hasSlackToken": "[not(equals(parameters('slackBotToken'), ''))]",
+    "hasWhatsAppToken": "[not(equals(parameters('whatsappToken'), ''))]",
+    "hasAtLeastOneMessagingToken": "[or(or(variables('hasDiscordToken'), variables('hasTelegramToken')), or(variables('hasSlackToken'), variables('hasWhatsAppToken')))]",
+    
+    "_comment2": "AI/LLM API key validation",
+    "hasAnthropicKey": "[not(equals(parameters('anthropicApiKey'), ''))]",
+    "anthropicKeyValid": "[and(variables('hasAnthropicKey'), startsWith(parameters('anthropicApiKey'), 'sk-ant-'))]",
+    "hasOpenAIKey": "[not(equals(parameters('openaiApiKey'), ''))]",
+    "openaiKeyValid": "[if(variables('hasOpenAIKey'), startsWith(parameters('openaiApiKey'), 'sk-'), true())]",
+    "hasGroqKey": "[not(equals(parameters('groqApiKey'), ''))]",
+    "groqKeyValid": "[if(variables('hasGroqKey'), startsWith(parameters('groqApiKey'), 'gsk_'), true())]",
+    
+    "_comment3": "External service token validation",
+    "hasGitHubToken": "[not(equals(parameters('githubToken'), ''))]",
+    "githubTokenValid": "[if(variables('hasGitHubToken'), startsWith(parameters('githubToken'), 'ghp_'), true())]",
+    "hasNotionKey": "[not(equals(parameters('notionApiKey'), ''))]",
+    "notionKeyValid": "[if(variables('hasNotionKey'), startsWith(parameters('notionApiKey'), 'secret_'), true())]",
+    
+    "validatedAppName": "[if(and(and(parameters('confirmTokensProvided'), variables('hasAtLeastOneMessagingToken')), and(variables('anthropicKeyValid'), and(variables('openaiKeyValid'), and(variables('groqKeyValid'), and(variables('githubTokenValid'), variables('notionKeyValid')))))), parameters('appName'), 'ERROR-Invalid-tokens-or-confirmation')]"
   },
   "resources": [
     {
@@ -188,12 +313,144 @@
     {
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/telegram-token')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('telegramBotToken'), ''), 'NOT_CONFIGURED', parameters('telegramBotToken'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/slack-token')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('slackBotToken'), ''), 'NOT_CONFIGURED', parameters('slackBotToken'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/whatsapp-token')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('whatsappToken'), ''), 'NOT_CONFIGURED', parameters('whatsappToken'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/anthropic-key')]",
       "dependsOn": [
         "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
       ],
       "properties": {
         "value": "[parameters('anthropicApiKey')]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/openai-key')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('openaiApiKey'), ''), 'NOT_CONFIGURED', parameters('openaiApiKey'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/groq-key')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('groqApiKey'), ''), 'NOT_CONFIGURED', parameters('groqApiKey'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/cohere-key')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('cohereApiKey'), ''), 'NOT_CONFIGURED', parameters('cohereApiKey'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/elevenlabs-key')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('elevenlabsApiKey'), ''), 'NOT_CONFIGURED', parameters('elevenlabsApiKey'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/brave-search-key')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('braveSearchApiKey'), ''), 'NOT_CONFIGURED', parameters('braveSearchApiKey'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/github-token')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('githubToken'), ''), 'NOT_CONFIGURED', parameters('githubToken'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/notion-key')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('notionApiKey'), ''), 'NOT_CONFIGURED', parameters('notionApiKey'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/gateway-token')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('gatewayToken'), ''), 'NOT_CONFIGURED', parameters('gatewayToken'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/webhook-secret')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('webhookSecret'), ''), 'NOT_CONFIGURED', parameters('webhookSecret'))]"
       }
     },
     {
@@ -206,17 +463,6 @@
       ],
       "properties": {
         "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-01-01').keys[0].value]"
-      }
-    },
-    {
-      "type": "Microsoft.KeyVault/vaults/secrets",
-      "apiVersion": "2023-07-01",
-      "name": "[concat(variables('keyVaultName'), '/telegram-token')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
-      "properties": {
-        "value": "[if(equals(parameters('telegramBotToken'), ''), 'NOT_CONFIGURED', parameters('telegramBotToken'))]"
       }
     },
     {
@@ -234,6 +480,23 @@
             "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))).customerId]",
             "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName')), '2022-10-01').primarySharedKey]"
           }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.App/managedEnvironments/storages",
+      "apiVersion": "2023-05-01",
+      "name": "[concat(variables('containerEnvironmentName'), '/workspace-storage')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', variables('containerEnvironmentName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts/fileServices/shares', variables('storageAccountName'), 'default', 'openclaw-data')]"
+      ],
+      "properties": {
+        "azureFile": {
+          "accountName": "[variables('storageAccountName')]",
+          "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-01-01').keys[0].value]",
+          "shareName": "openclaw-data",
+          "accessMode": "ReadWrite"
         }
       }
     },
@@ -266,18 +529,73 @@
               "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
             },
             {
+              "name": "telegram-token",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/telegram-token')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "slack-token",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/slack-token')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "whatsapp-token",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/whatsapp-token')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
               "name": "anthropic-key",
               "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/anthropic-key')]",
               "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
             },
             {
-              "name": "storage-key",
-              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/storage-key')]",
+              "name": "openai-key",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/openai-key')]",
               "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
             },
             {
-              "name": "telegram-token",
-              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/telegram-token')]",
+              "name": "groq-key",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/groq-key')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "cohere-key",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/cohere-key')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "elevenlabs-key",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/elevenlabs-key')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "brave-search-key",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/brave-search-key')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "github-token",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/github-token')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "notion-key",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/notion-key')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "gateway-token",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/gateway-token')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "webhook-secret",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/webhook-secret')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "storage-key",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/storage-key')]",
               "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
             }
           ],
@@ -301,8 +619,52 @@
                   "secretRef": "telegram-token"
                 },
                 {
+                  "name": "SLACK_BOT_TOKEN",
+                  "secretRef": "slack-token"
+                },
+                {
+                  "name": "WHATSAPP_TOKEN",
+                  "secretRef": "whatsapp-token"
+                },
+                {
                   "name": "ANTHROPIC_API_KEY",
                   "secretRef": "anthropic-key"
+                },
+                {
+                  "name": "OPENAI_API_KEY",
+                  "secretRef": "openai-key"
+                },
+                {
+                  "name": "GROQ_API_KEY",
+                  "secretRef": "groq-key"
+                },
+                {
+                  "name": "COHERE_API_KEY",
+                  "secretRef": "cohere-key"
+                },
+                {
+                  "name": "ELEVENLABS_API_KEY",
+                  "secretRef": "elevenlabs-key"
+                },
+                {
+                  "name": "BRAVE_SEARCH_API_KEY",
+                  "secretRef": "brave-search-key"
+                },
+                {
+                  "name": "GITHUB_TOKEN",
+                  "secretRef": "github-token"
+                },
+                {
+                  "name": "NOTION_API_KEY",
+                  "secretRef": "notion-key"
+                },
+                {
+                  "name": "GATEWAY_TOKEN",
+                  "secretRef": "gateway-token"
+                },
+                {
+                  "name": "WEBHOOK_SECRET",
+                  "secretRef": "webhook-secret"
                 },
                 {
                   "name": "AZURE_STORAGE_ACCOUNT_NAME",
@@ -325,8 +687,16 @@
                   "value": "[variables('hasDiscordToken')]"
                 },
                 {
-                  "name": "HAS_TELEGRAM_TOKEN", 
+                  "name": "HAS_TELEGRAM_TOKEN",
                   "value": "[variables('hasTelegramToken')]"
+                },
+                {
+                  "name": "HAS_SLACK_TOKEN",
+                  "value": "[variables('hasSlackToken')]"
+                },
+                {
+                  "name": "HAS_WHATSAPP_TOKEN",
+                  "value": "[variables('hasWhatsAppToken')]"
                 }
               ],
               "resources": {
@@ -352,23 +722,6 @@
               "storageName": "workspace-storage"
             }
           ]
-        }
-      }
-    },
-    {
-      "type": "Microsoft.App/managedEnvironments/storages",
-      "apiVersion": "2023-05-01",
-      "name": "[concat(variables('containerEnvironmentName'), '/workspace-storage')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.App/managedEnvironments', variables('containerEnvironmentName'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts/fileServices/shares', variables('storageAccountName'), 'default', 'openclaw-data')]"
-      ],
-      "properties": {
-        "azureFile": {
-          "accountName": "[variables('storageAccountName')]",
-          "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-01-01').keys[0].value]",
-          "shareName": "openclaw-data",
-          "accessMode": "ReadWrite"
         }
       }
     }
@@ -402,18 +755,41 @@
         "description": "Azure Storage Account for your bot's workspace and data"
       }
     },
-    "discordBotInstructions": {
+    "deploymentSummary": {
       "type": "string",
-      "value": "Your OpenClaw bot is starting up! It may take 2-3 minutes to be ready. Check your Discord server - the bot should appear online. If not, see troubleshooting docs.",
+      "value": "Your OpenClaw bot is starting up! It may take 2-3 minutes to be ready. Check your configured platforms (Discord/Telegram/Slack/WhatsApp) - the bot should appear online. If not, see troubleshooting docs.",
       "metadata": {
         "description": "Next steps after deployment"
       }
     },
-    "botTokensProvided": {
-      "type": "string",
-      "value": "[if(variables('hasDiscordToken'), concat('Discord: YES', if(variables('hasTelegramToken'), ', Telegram: YES', ', Telegram: NO')), if(variables('hasTelegramToken'), 'Discord: NO, Telegram: YES', 'IMPORTANT: No bot tokens provided! Please provide either Discord or Telegram token for your bot to work.'))]",
+    "tokensProvided": {
+      "type": "object",
+      "value": {
+        "messaging": {
+          "discord": "[variables('hasDiscordToken')]",
+          "telegram": "[variables('hasTelegramToken')]",
+          "slack": "[variables('hasSlackToken')]",
+          "whatsapp": "[variables('hasWhatsAppToken')]"
+        },
+        "ai": {
+          "anthropic": "[variables('hasAnthropicKey')]",
+          "openai": "[variables('hasOpenAIKey')]",
+          "groq": "[variables('hasGroqKey')]",
+          "cohere": "[not(equals(parameters('cohereApiKey'), ''))]"
+        },
+        "services": {
+          "elevenlabs": "[not(equals(parameters('elevenlabsApiKey'), ''))]",
+          "braveSearch": "[not(equals(parameters('braveSearchApiKey'), ''))]",
+          "github": "[variables('hasGitHubToken')]",
+          "notion": "[variables('hasNotionKey')]"
+        },
+        "federation": {
+          "gateway": "[not(equals(parameters('gatewayToken'), ''))]",
+          "webhook": "[not(equals(parameters('webhookSecret'), ''))]"
+        }
+      },
       "metadata": {
-        "description": "Shows which bot tokens were provided. At least one is required for the bot to function."
+        "description": "Summary of which tokens and services are configured"
       }
     }
   }
