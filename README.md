@@ -111,6 +111,11 @@ Estimated monthly costs (US East region):
 - Verify bot permissions in Discord
 - Check Application logs for errors
 
+**Form validation errors?**
+- **Discord Token**: Should be ~59 characters, starts with `MT` or `MQ`
+- **Anthropic Key**: Should be ~100+ characters, starts with `sk-ant-api-`
+- If you see validation errors, check the "Errors" panel on the right →
+
 **Deployment failed?**
 - Check all required fields are filled
 - Ensure app name is 3-12 characters, letters/numbers only

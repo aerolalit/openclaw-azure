@@ -22,14 +22,12 @@
     },
     "discordBotToken": {
       "type": "securestring",
-      "minLength": 50,
       "metadata": {
         "description": "Discord bot token from Discord Developer Portal. Should start with 'MT' or 'MQ' and be about 59 characters long."
       }
     },
     "anthropicApiKey": {
       "type": "securestring",
-      "minLength": 40,
       "metadata": {
         "description": "Anthropic Claude API key from https://console.anthropic.com. Should start with 'sk-ant-api-' and be about 100+ characters long."
       }
