@@ -7,7 +7,9 @@ Welcome! This guide will help you deploy your own OpenClaw AI assistant to Azure
 You'll need:
 
 1. **Azure account** with an active subscription
-2. **Discord bot token** - [Get one here](get-discord-token.md)
+2. **Bot token** - Choose one:
+   - **Discord bot token** - [Get one here](get-discord-token.md) OR  
+   - **Telegram bot token** - [Get one here](get-telegram-token.md)
 3. **Anthropic API key** - [Get one here](get-anthropic-key.md)
 
 ## Step 1: Open Azure Portal
@@ -39,9 +41,13 @@ You'll see a form with several fields:
 - Example: `myclaw2024`
 - This will be part of your app's URL
 
-**Discord Bot Token**: Paste the token you got from Discord (starts with `MT...`)
+**Discord Bot Token**: Paste the token you got from Discord (starts with `MT...`) - leave empty if using Telegram
+
+**Telegram Bot Token**: Paste the token you got from @BotFather (like `123456789:ABC...`) - leave empty if using Discord
 
 **Anthropic API Key**: Paste your Claude API key (starts with `sk-ant-...`)
+
+**Note:** You need either a Discord token OR a Telegram token (not both).
 
 ### Optional Fields (you can leave these as default)
 
@@ -71,8 +77,14 @@ Once deployment completes:
 
 ## Step 6: Test Your OpenClaw
 
-1. Go to your Discord server
+**If you used Discord:**
+1. Go to your Discord server  
 2. Type a message mentioning your bot: `@YourBotName hello`
+3. Your OpenClaw should respond! 🎉
+
+**If you used Telegram:**
+1. Open Telegram and search for your bot: `@YourBotName`
+2. Type a message like "Hello!"
 3. Your OpenClaw should respond! 🎉
 
 ## What If Something Goes Wrong?

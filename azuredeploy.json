@@ -2,7 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "metadata": {
-    "description": "Deploy your own OpenClaw AI Assistant to Azure. Creates a private Discord bot powered by Claude AI. Cost estimate: $20-30/month. Requires Discord bot token and Anthropic API key."
+    "description": "Deploy your own OpenClaw AI Assistant to Azure. Creates a private Discord or Telegram bot powered by Claude AI. Cost estimate: $20-30/month. Requires bot token (Discord or Telegram) and Anthropic API key."
   },
   "parameters": {
     "appName": {
@@ -30,6 +30,13 @@
       "type": "securestring",
       "metadata": {
         "description": "Anthropic Claude API key from https://console.anthropic.com. Should start with 'sk-ant-api-' and be about 100+ characters long."
+      }
+    },
+    "telegramBotToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Telegram bot token from @BotFather. Leave empty to use Discord only. Format: 123456789:ABCdef..."
       }
     },
     "containerCpu": {
@@ -189,6 +196,17 @@
       }
     },
     {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/telegram-token')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[if(equals(parameters('telegramBotToken'), ''), 'NOT_CONFIGURED', parameters('telegramBotToken'))]"
+      }
+    },
+    {
       "type": "Microsoft.App/managedEnvironments",
       "apiVersion": "2023-05-01",
       "name": "[variables('containerEnvironmentName')]",
@@ -242,6 +260,11 @@
               "name": "storage-key",
               "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/storage-key')]",
               "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
+            },
+            {
+              "name": "telegram-token",
+              "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets/telegram-token')]",
+              "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]"
             }
           ],
           "ingress": {
@@ -258,6 +281,10 @@
                 {
                   "name": "DISCORD_TOKEN",
                   "secretRef": "discord-token"
+                },
+                {
+                  "name": "TELEGRAM_TOKEN",
+                  "secretRef": "telegram-token"
                 },
                 {
                   "name": "ANTHROPIC_API_KEY",

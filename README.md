@@ -6,7 +6,7 @@ Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on Azu
 
 ## ✨ What You Get
 
-- 🤖 **Private Discord Bot** powered by Claude AI
+- 🤖 **Private AI Bot** for Discord or Telegram powered by Claude AI
 - 🔒 **Secure** - Your API keys stored in Azure Key Vault
 - 💰 **Cost-Optimized** - Approximately $20-30/month
 - ⚡ **One-Click Deploy** - No coding or DevOps knowledge required
@@ -18,7 +18,9 @@ Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on Azu
 
 You'll need:
 1. **Azure Account** ([sign up free](https://azure.microsoft.com/free))
-2. **Discord Bot Token** ([setup guide](#discord-setup))
+2. **Bot Token** - Choose one:
+   - **Discord Bot Token** ([setup guide](#discord-setup)) OR
+   - **Telegram Bot Token** ([setup guide](#telegram-setup))
 3. **Anthropic API Key** ([get yours here](https://console.anthropic.com))
 
 ### Deploy to Azure
@@ -49,6 +51,28 @@ You'll need:
    - Select scopes: `bot`, `applications.commands`
    - Select permissions: `Send Messages`, `Read Message History`, `Use Slash Commands`
    - Copy the generated URL and open it to add the bot to your Discord server
+
+### Telegram Setup (Alternative to Discord)
+
+**Easier setup - recommended for beginners!**
+
+1. **Start Chat with BotFather**
+   - Open Telegram and search for `@BotFather`
+   - Start a chat and type `/start`
+
+2. **Create Your Bot**
+   - Type `/newbot`
+   - Give your bot a display name (e.g., "My AI Assistant")
+   - Give your bot a username ending in "bot" (e.g., `MyAssistantBot`)
+
+3. **Get Your Token**
+   - Copy the token BotFather gives you
+   - Format: `123456789:ABCdef1234567890abcdef1234567890ABC`
+   - **Save this token** - you'll need it for deployment
+
+4. **Configure Privacy (Important!)**
+   - Type `/mybots` → Select your bot → "Bot Settings" → "Group Privacy" → "Disable"
+   - This lets your bot see all messages (not just mentions)
 
 ### Anthropic API Key
 
@@ -85,31 +109,48 @@ Estimated monthly costs (US East region):
 |-----------|-------------|---------|
 | **App Name** | Short name for your bot (3-12 chars) | `mybot` |
 | **Discord Token** | From Discord Developer Portal | `MTEyMz...` |
+| **Telegram Token** | From Telegram @BotFather (optional) | `123456789:ABC...` |
 | **Anthropic Key** | From Anthropic Console | `sk-ant-api-...` |
 | **CPU** | Container CPU allocation | `1.0` (recommended) |
 | **Memory** | Container memory allocation | `2Gi` (recommended) |
 | **Log Retention** | How long to keep logs | `30` days |
+
+**Note:** You need either a Discord token OR a Telegram token (or both!).
 
 ---
 
 ## 📖 After Deployment
 
 ### Check if it's working
+
+**For Discord:**
 1. **Find your bot** in Discord - it should show as "Online"
 2. **Send a message** like "Hello!" - it should respond
+
+**For Telegram:**
+1. **Open your bot** in Telegram (search for @YourBotName)
+2. **Send a message** like "Hello!" - it should respond
+
+**Both platforms:**
 3. **Check logs** using the Container App URL from deployment outputs
 
 ### Troubleshooting
 
-**Bot appears offline?**
+**Discord bot appears offline?**
 - Wait 2-3 minutes for startup
 - Check Container App logs in Azure Portal
 - Verify Discord token is correct
+- Make sure bot has proper permissions in your Discord server
 
-**Bot doesn't respond?**
+**Telegram bot doesn't respond?**
+- Make sure you disabled "Group Privacy" for your bot (see setup guide)
+- Try typing `/start` to your bot first
+- Check that the token format is correct (numbers:letters)
+
+**Bot doesn't respond on either platform?**
 - Check Anthropic API key is valid
-- Verify bot permissions in Discord
-- Check Application logs for errors
+- Check Container App logs for errors
+- Verify bot tokens are entered correctly
 
 **Form validation errors?**
 - **Discord Token**: Should be ~59 characters, starts with `MT` or `MQ`
