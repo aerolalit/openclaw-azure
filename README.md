@@ -77,11 +77,19 @@ You'll need:
 
 ### Anthropic API Key
 
+**Method 1: Console (Recommended)**
 1. Go to [Anthropic Console](https://console.anthropic.com)
-2. Sign up/Sign in
+2. Sign up/Sign in  
 3. Go to "API Keys" section
 4. Click "Create Key"
-5. **Save this key** - you'll need it for deployment
+5. **Save this key** (starts with `sk-ant-api03-`)
+
+**Method 2: Claude CLI**  
+1. Install Claude CLI: `npm install -g @anthropic-ai/claude-cli`
+2. Run: `claude setup-token`
+3. **Save this key** (starts with `sk-ant-oat01-`)
+
+Both token types work with OpenClaw!
 
 ---
 
@@ -156,7 +164,7 @@ Estimated monthly costs (US East region):
 **Form validation errors?**
 - **Discord Token**: Should be ~59 characters, starts with `MT` or `MQ`
 - **Telegram Token**: Should be ~45 characters, format `123456789:ABCdef...`
-- **Anthropic Key**: Should be ~100+ characters, starts with `sk-ant-api-`
+- **Anthropic Key**: Should start with `sk-ant-` (various formats: sk-ant-api03-, sk-ant-oat01-, etc.)
 - **⚠️ Must provide at least one bot token** (Discord OR Telegram)
 - If you see validation errors, check the "Errors" panel on the right →
 
