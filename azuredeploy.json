@@ -81,7 +81,7 @@
   },
   "variables": {
     "keyVaultName": "[concat(take(parameters('appName'), 8), '-kv-', take(uniqueString(resourceGroup().id), 10))]",
-    "storageAccountName": "[if(variables('hasAtLeastOneToken'), toLower(concat(take(parameters('appName'), 8), take(uniqueString(resourceGroup().id), 15))), 'You must provide either Discord or Telegram token')]",
+    "storageAccountName": "[toLower(concat(take(parameters('appName'), 8), take(uniqueString(resourceGroup().id), 15)))]",
     "containerAppName": "[concat(parameters('appName'), '-app')]",
     "containerEnvironmentName": "[concat(parameters('appName'), '-env')]",
     "logAnalyticsName": "[concat(parameters('appName'), '-logs')]",
@@ -309,6 +309,14 @@
                 {
                   "name": "AGENT_NAME",
                   "value": "[parameters('appName')]"
+                },
+                {
+                  "name": "HAS_DISCORD_TOKEN",
+                  "value": "[variables('hasDiscordToken')]"
+                },
+                {
+                  "name": "HAS_TELEGRAM_TOKEN", 
+                  "value": "[variables('hasTelegramToken')]"
                 }
               ],
               "resources": {
@@ -391,9 +399,12 @@
         "description": "Next steps after deployment"
       }
     },
-    "tokenValidation": {
+    "botTokensProvided": {
       "type": "string",
-      "value": "[if(variables('hasAtLeastOneToken'), 'SUCCESS: Bot token provided', 'ERROR: You must provide either Discord bot token OR Telegram bot token')]"
+      "value": "[if(variables('hasDiscordToken'), concat('Discord: YES', if(variables('hasTelegramToken'), ', Telegram: YES', ', Telegram: NO')), if(variables('hasTelegramToken'), 'Discord: NO, Telegram: YES', 'IMPORTANT: No bot tokens provided! Please provide either Discord or Telegram token for your bot to work.'))]",
+      "metadata": {
+        "description": "Shows which bot tokens were provided. At least one is required for the bot to function."
+      }
     }
   }
 }
