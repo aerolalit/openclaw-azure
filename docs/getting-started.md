@@ -41,13 +41,13 @@ You'll see a form with several fields:
 - Example: `myclaw2024`
 - This will be part of your app's URL
 
-**Discord Bot Token**: Paste the token you got from Discord (starts with `MT...`) - leave empty if using Telegram
+**Discord Bot Token**: Paste the token you got from Discord (starts with `MT...`) - leave empty if using Telegram only
 
-**Telegram Bot Token**: Paste the token you got from @BotFather (like `123456789:ABC...`) - leave empty if using Discord
+**Telegram Bot Token**: Paste the token you got from @BotFather (like `123456789:ABC...`) - leave empty if using Discord only
 
 **Anthropic API Key**: Paste your Claude API key (starts with `sk-ant-...`)
 
-**Note:** You need either a Discord token OR a Telegram token (not both).
+**⚠️ Important:** You must provide at least one bot token (Discord OR Telegram). You can also provide both if you want your bot on both platforms!
 
 ### Optional Fields (you can leave these as default)
 

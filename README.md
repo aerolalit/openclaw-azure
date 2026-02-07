@@ -18,9 +18,10 @@ Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on Azu
 
 You'll need:
 1. **Azure Account** ([sign up free](https://azure.microsoft.com/free))
-2. **Bot Token** - Choose one:
+2. **Bot Token** - Choose at least one:
    - **Discord Bot Token** ([setup guide](#discord-setup)) OR
-   - **Telegram Bot Token** ([setup guide](#telegram-setup))
+   - **Telegram Bot Token** ([setup guide](#telegram-setup)) OR
+   - **Both** (if you want your bot on both platforms!)
 3. **Anthropic API Key** ([get yours here](https://console.anthropic.com))
 
 ### Deploy to Azure
@@ -108,14 +109,14 @@ Estimated monthly costs (US East region):
 | Parameter | Description | Example |
 |-----------|-------------|---------|
 | **App Name** | Short name for your bot (3-12 chars) | `mybot` |
-| **Discord Token** | From Discord Developer Portal | `MTEyMz...` |
-| **Telegram Token** | From Telegram @BotFather (optional) | `123456789:ABC...` |
+| **Discord Token** | From Discord Developer Portal (leave empty if using Telegram only) | `MTEyMz...` |
+| **Telegram Token** | From Telegram @BotFather (leave empty if using Discord only) | `123456789:ABC...` |
 | **Anthropic Key** | From Anthropic Console | `sk-ant-api-...` |
 | **CPU** | Container CPU allocation | `1.0` (recommended) |
 | **Memory** | Container memory allocation | `2Gi` (recommended) |
 | **Log Retention** | How long to keep logs | `30` days |
 
-**Note:** You need either a Discord token OR a Telegram token (or both!).
+**⚠️ Important:** You must provide at least one bot token (Discord OR Telegram). You can also provide both if you want your bot on both platforms!
 
 ---
 
@@ -154,11 +155,14 @@ Estimated monthly costs (US East region):
 
 **Form validation errors?**
 - **Discord Token**: Should be ~59 characters, starts with `MT` or `MQ`
+- **Telegram Token**: Should be ~45 characters, format `123456789:ABCdef...`
 - **Anthropic Key**: Should be ~100+ characters, starts with `sk-ant-api-`
+- **⚠️ Must provide at least one bot token** (Discord OR Telegram)
 - If you see validation errors, check the "Errors" panel on the right →
 
 **Deployment failed?**
 - Check all required fields are filled
+- **Ensure you provided at least one bot token** (Discord or Telegram)
 - Ensure app name is 3-12 characters, letters/numbers only
 - Try a different Azure region
 
