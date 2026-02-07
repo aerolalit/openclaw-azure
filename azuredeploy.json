@@ -288,7 +288,7 @@
         "template": {
           "containers": [
             {
-              "image": "ghcr.io/openclaw/openclaw:latest",
+              "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
               "env": [
                 {
