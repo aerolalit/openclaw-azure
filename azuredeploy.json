@@ -297,7 +297,7 @@
                   "secretRef": "discord-token"
                 },
                 {
-                  "name": "TELEGRAM_TOKEN",
+                  "name": "TELEGRAM_BOT_TOKEN",
                   "secretRef": "telegram-token"
                 },
                 {
