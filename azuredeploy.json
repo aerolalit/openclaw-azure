@@ -24,7 +24,7 @@
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "Discord bot token from Discord Developer Portal. Leave empty to use Telegram instead. Should start with 'MT' or 'MQ' and be about 59 characters long."
+        "description": "Discord bot token from Discord Developer Portal. REQUIRED if not using Telegram. Leave empty only if using Telegram instead. Should start with 'MT' or 'MQ'."
       }
     },
     "anthropicApiKey": {
@@ -37,7 +37,17 @@
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "OPTIONAL: Telegram bot token from @BotFather. Leave empty to use Discord only. Format: 123456789:ABCdef..."
+        "description": "Telegram bot token from @BotFather. REQUIRED if not using Discord. Leave empty only if using Discord instead. Format: 123456789:ABCdef..."
+      }
+    },
+    "confirmTokenRequirement": {
+      "type": "string",
+      "defaultValue": "I have provided at least one bot token above",
+      "allowedValues": [
+        "I have provided at least one bot token above"
+      ],
+      "metadata": {
+        "description": "⚠️ CONFIRMATION: You MUST provide either Discord token OR Telegram token above for your bot to work! Please confirm you have filled in at least one."
       }
     },
     "containerCpu": {
