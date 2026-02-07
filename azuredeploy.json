@@ -24,30 +24,28 @@
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "Discord bot token from Discord Developer Portal. REQUIRED if not using Telegram. Leave empty only if using Telegram instead. Should start with 'MT' or 'MQ'."
+        "description": "Discord bot token from Discord Developer Portal. REQUIRED if not using Telegram. Should start with 'MT' or 'MQ' and be ~59 characters long. Leave empty ONLY if using Telegram."
       }
     },
     "anthropicApiKey": {
       "type": "securestring",
+      "minLength": 50,
       "metadata": {
-        "description": "Anthropic Claude API key from https://console.anthropic.com. Should start with 'sk-ant-api-' and be about 100+ characters long."
+        "description": "Anthropic Claude API key from https://console.anthropic.com. Must start with 'sk-ant-api-' and be at least 50 characters long."
       }
     },
     "telegramBotToken": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "Telegram bot token from @BotFather. REQUIRED if not using Discord. Leave empty only if using Discord instead. Format: 123456789:ABCdef..."
+        "description": "Telegram bot token from @BotFather. REQUIRED if not using Discord. Format: numbers:letters (like 123456789:ABCdef...). Leave empty ONLY if using Discord."
       }
     },
-    "confirmTokenRequirement": {
-      "type": "string",
-      "defaultValue": "I have provided at least one bot token above",
-      "allowedValues": [
-        "I have provided at least one bot token above"
-      ],
+    "confirmBotTokenProvided": {
+      "type": "bool",
+      "defaultValue": false,
       "metadata": {
-        "description": "⚠️ CONFIRMATION: You MUST provide either Discord token OR Telegram token above for your bot to work! Please confirm you have filled in at least one."
+        "description": "⚠️ REQUIRED CONFIRMATION: Check this box to confirm you have provided either Discord token OR Telegram token above. Your bot will NOT work without at least one token!"
       }
     },
     "containerCpu": {
@@ -90,15 +88,16 @@
     }
   },
   "variables": {
-    "keyVaultName": "[concat(take(parameters('appName'), 8), '-kv-', take(uniqueString(resourceGroup().id), 10))]",
-    "storageAccountName": "[toLower(concat(take(parameters('appName'), 8), take(uniqueString(resourceGroup().id), 15)))]",
-    "containerAppName": "[concat(parameters('appName'), '-app')]",
-    "containerEnvironmentName": "[concat(parameters('appName'), '-env')]",
-    "logAnalyticsName": "[concat(parameters('appName'), '-logs')]",
-    "managedIdentityName": "[concat(parameters('appName'), '-identity')]",
+    "keyVaultName": "[concat(take(variables('validatedAppName'), 8), '-kv-', take(uniqueString(resourceGroup().id), 10))]",
+    "storageAccountName": "[toLower(concat(take(variables('validatedAppName'), 8), take(uniqueString(resourceGroup().id), 15)))]",
+    "containerAppName": "[concat(variables('validatedAppName'), '-app')]",
+    "containerEnvironmentName": "[concat(variables('validatedAppName'), '-env')]",
+    "logAnalyticsName": "[concat(variables('validatedAppName'), '-logs')]",
+    "managedIdentityName": "[concat(variables('validatedAppName'), '-identity')]",
     "hasDiscordToken": "[not(equals(parameters('discordBotToken'), ''))]",
     "hasTelegramToken": "[not(equals(parameters('telegramBotToken'), ''))]",
-    "hasAtLeastOneToken": "[or(variables('hasDiscordToken'), variables('hasTelegramToken'))]"
+    "hasAtLeastOneToken": "[or(variables('hasDiscordToken'), variables('hasTelegramToken'))]",
+    "validatedAppName": "[if(parameters('confirmBotTokenProvided'), parameters('appName'), 'ERROR-Must-confirm-bot-tokens-provided')]"
   },
   "resources": [
     {
@@ -318,7 +317,7 @@
                 },
                 {
                   "name": "AGENT_NAME",
-                  "value": "[parameters('appName')]"
+                  "value": "[variables('validatedAppName')]"
                 },
                 {
                   "name": "HAS_DISCORD_TOKEN",
