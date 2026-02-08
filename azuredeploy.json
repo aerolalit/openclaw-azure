@@ -443,7 +443,7 @@
         "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
       ],
       "properties": {
-        "value": "[if(equals(parameters('gatewayToken'), ''), 'NOT_CONFIGURED', parameters('gatewayToken'))]"
+        "value": "[if(equals(parameters('gatewayToken'), ''), concat('local-', uniqueString(resourceGroup().id)), parameters('gatewayToken'))]"
       }
     },
     {
@@ -664,7 +664,7 @@
                   "secretRef": "notion-key"
                 },
                 {
-                  "name": "GATEWAY_TOKEN",
+                  "name": "OPENCLAW_GATEWAY_TOKEN",
                   "secretRef": "gateway-token"
                 },
                 {
@@ -730,6 +730,14 @@
                 {
                   "name": "AUTO_START_GATEWAY",
                   "value": "true"
+                },
+                {
+                  "name": "OPENCLAW_GATEWAY_AUTH",
+                  "value": "none"
+                },
+                {
+                  "name": "GATEWAY_AUTH_MODE", 
+                  "value": "none"
                 }
               ],
               "resources": {
