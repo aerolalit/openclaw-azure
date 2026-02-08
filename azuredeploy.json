@@ -613,7 +613,7 @@
             {
               "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
-              "command": ["openclaw", "gateway"],
+              "command": ["node", "dist/index.js"],
               "env": [
                 {
                   "name": "DISCORD_BOT_TOKEN",
@@ -686,6 +686,10 @@
                 {
                   "name": "AGENT_NAME",
                   "value": "[variables('validatedAppName')]"
+                },
+                {
+                  "name": "OPENCLAW_START_GATEWAY",
+                  "value": "true"
                 },
                 {
                   "name": "HAS_DISCORD_TOKEN",
