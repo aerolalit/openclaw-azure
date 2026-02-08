@@ -613,7 +613,7 @@
             {
               "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
-              "command": ["/bin/sh", "-c", "mkdir -p /workspace && echo 'channels:' > /workspace/config.yaml && ([ '$DISCORD_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  discord: {enabled: true, groupPolicy: open, dm: {enabled: true, policy: open, allowFrom: [\"*\"]}}' >> /workspace/config.yaml || true) && ([ '$TELEGRAM_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  telegram: {enabled: true}' >> /workspace/config.yaml || true) && ([ '$SLACK_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  slack: {enabled: true}' >> /workspace/config.yaml || true) && echo 'Generated config:' && cat /workspace/config.yaml && node dist/index.js gateway --port 18789 --bind lan --allow-unconfigured"],
+              "command": ["/bin/sh", "-c", "mkdir -p /workspace && echo 'gateway:' > /workspace/config.yaml && echo '  trustedProxies: [\"100.100.0.0/16\", \"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\"]' >> /workspace/config.yaml && echo 'channels:' >> /workspace/config.yaml && ([ '$DISCORD_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  discord: {enabled: true, groupPolicy: open, dm: {enabled: true, policy: open, allowFrom: [\"*\"]}}' >> /workspace/config.yaml || true) && ([ '$TELEGRAM_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  telegram: {enabled: true}' >> /workspace/config.yaml || true) && ([ '$SLACK_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  slack: {enabled: true}' >> /workspace/config.yaml || true) && echo 'Generated config:' && cat /workspace/config.yaml && node dist/index.js gateway --port 18789 --bind lan --allow-unconfigured"],
               "env": [
                 {
                   "name": "DISCORD_BOT_TOKEN",
@@ -805,10 +805,17 @@
       }
     },
     "deploymentSummary": {
-      "type": "string",
-      "value": "Your OpenClaw bot is starting up! It may take 2-3 minutes to be ready. Check your configured platforms (Discord/Telegram/Slack/WhatsApp) - the bot should appear online. If not, see troubleshooting docs.",
+      "type": "string", 
+      "value": "✅ OpenClaw deployed successfully! Next steps: 1️⃣ Open the Container App URL below 2️⃣ Copy the Gateway Token and paste it in Control UI Settings 3️⃣ Go to Channels tab and enable your platforms (Discord/Telegram/Slack) 4️⃣ Your bots will be online and ready!",
       "metadata": {
         "description": "Next steps after deployment"
+      }
+    },
+    "gatewayToken": {
+      "type": "string",
+      "value": "[if(equals(parameters('gatewayToken'), ''), concat('local-', uniqueString(resourceGroup().id)), parameters('gatewayToken'))]",
+      "metadata": {
+        "description": "Gateway token for accessing the OpenClaw Control UI. Copy this token and paste it in the Control UI settings to gain access."
       }
     },
     "tokensProvided": {
