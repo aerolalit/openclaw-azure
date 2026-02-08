@@ -25,13 +25,7 @@
         "description": "Short name for your OpenClaw instance (3-12 chars, letters and numbers only). Example: 'mybot' or 'assistant1'"
       }
     },
-    "confirmTokensProvided": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "⚠️ REQUIRED CONFIRMATION: Check this box to confirm you have provided either Discord token OR Telegram token below. Your bot will NOT work without at least one token!"
-      }
-    },
+""
     "_messagingTokens": {
       "type": "object",
       "defaultValue": {},
@@ -233,7 +227,7 @@
     "githubTokenValid": "[if(variables('hasGitHubToken'), startsWith(parameters('githubToken'), 'ghp_'), true())]",
     "hasNotionKey": "[not(equals(parameters('notionApiKey'), ''))]",
     "notionKeyValid": "[if(variables('hasNotionKey'), startsWith(parameters('notionApiKey'), 'secret_'), true())]",
-    "validatedAppName": "[if(and(and(parameters('confirmTokensProvided'), variables('hasAtLeastOneMessagingToken')), and(variables('anthropicKeyValid'), and(variables('openaiKeyValid'), and(variables('groqKeyValid'), and(variables('githubTokenValid'), variables('notionKeyValid')))))), parameters('appName'), 'ERROR-Invalid-tokens-or-confirmation')]"
+    "validatedAppName": "[if(and(variables('hasAtLeastOneMessagingToken'), and(variables('anthropicKeyValid'), and(variables('openaiKeyValid'), and(variables('groqKeyValid'), and(variables('githubTokenValid'), variables('notionKeyValid')))))), parameters('appName'), 'ERROR-Invalid-tokens')]"
   },
   "resources": [
     {
@@ -612,7 +606,7 @@
           ],
           "ingress": {
             "external": true,
-            "targetPort": 3000
+            "targetPort": 18789
           }
         },
         "template": {
@@ -620,11 +614,11 @@
             {
               "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
-              "command": ["/bin/sh"],
-              "args": ["-c", "echo 'Starting OpenClaw...' && openclaw start & OPENCLAW_PID=$! && sleep 15 && echo 'Auto-configuring channels...' && (openclaw channels enable telegram || true) && (openclaw channels enable discord || true) && echo 'OpenClaw ready!' && wait $OPENCLAW_PID"],
+              "command": ["node"],
+              "args": ["dist/index.js"],
               "env": [
                 {
-                  "name": "DISCORD_TOKEN",
+                  "name": "DISCORD_BOT_TOKEN",
                   "secretRef": "discord-token"
                 },
                 {
