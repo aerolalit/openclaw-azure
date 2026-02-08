@@ -605,7 +605,15 @@
           ],
           "ingress": {
             "external": true,
-            "targetPort": 18789
+            "targetPort": 18789,
+            "transport": "auto",
+            "allowInsecure": false,
+            "traffic": [
+              {
+                "weight": 100,
+                "latestRevision": true
+              }
+            ]
           }
         },
         "template": {
