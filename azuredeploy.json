@@ -25,7 +25,6 @@
         "description": "Short name for your OpenClaw instance (3-12 chars, letters and numbers only). Example: 'mybot' or 'assistant1'"
       }
     },
-""
     "_messagingTokens": {
       "type": "object",
       "defaultValue": {},
