@@ -613,7 +613,7 @@
             {
               "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
-              "command": ["node", "dist/index.js", "gateway", "--port", "18789", "--allow-unconfigured"],
+              "command": ["node", "dist/index.js", "gateway", "--port", "18789", "--host", "0.0.0.0", "--allow-unconfigured"],
               "env": [
                 {
                   "name": "DISCORD_BOT_TOKEN",
@@ -738,6 +738,14 @@
                 {
                   "name": "GATEWAY_AUTH_MODE", 
                   "value": "none"
+                },
+                {
+                  "name": "OPENCLAW_GATEWAY_HOST",
+                  "value": "0.0.0.0"
+                },
+                {
+                  "name": "HOST",
+                  "value": "0.0.0.0"
                 }
               ],
               "resources": {
