@@ -708,6 +708,18 @@
                 {
                   "name": "HAS_WHATSAPP_TOKEN",
                   "value": "[variables('hasWhatsAppToken')]"
+                },
+                {
+                  "name": "OPENCLAW_AUTO_ENABLE_CHANNELS",
+                  "value": "true"
+                },
+                {
+                  "name": "OPENCLAW_SKIP_GATEWAY_TOKEN_CHECK",
+                  "value": "true"
+                },
+                {
+                  "name": "OPENCLAW_AUTO_START",
+                  "value": "true"
                 }
               ],
               "resources": {
