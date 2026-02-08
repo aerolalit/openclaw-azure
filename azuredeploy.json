@@ -613,7 +613,7 @@
             {
               "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
-              "command": ["node", "dist/index.js", "gateway", "--port", "18789", "--host", "0.0.0.0", "--allow-unconfigured"],
+              "command": ["/bin/sh", "-c", "mkdir -p /workspace && echo 'channels:' > /workspace/config.yaml && ([ '$DISCORD_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  discord: {enabled: true, groupPolicy: open, dm: {enabled: true, policy: open, allowFrom: [*]}}' >> /workspace/config.yaml || true) && ([ '$TELEGRAM_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  telegram: {enabled: true}' >> /workspace/config.yaml || true) && ([ '$SLACK_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  slack: {enabled: true}' >> /workspace/config.yaml || true) && echo 'Generated config:' && cat /workspace/config.yaml && node dist/index.js gateway --port 18789 --host 0.0.0.0 --allow-unconfigured"],
               "env": [
                 {
                   "name": "DISCORD_BOT_TOKEN",
@@ -746,34 +746,6 @@
                 {
                   "name": "HOST",
                   "value": "0.0.0.0"
-                },
-                {
-                  "name": "DISCORD_ENABLED",
-                  "value": "[if(variables('hasDiscordToken'), 'true', 'false')]"
-                },
-                {
-                  "name": "TELEGRAM_ENABLED", 
-                  "value": "[if(variables('hasTelegramToken'), 'true', 'false')]"
-                },
-                {
-                  "name": "SLACK_ENABLED",
-                  "value": "[if(variables('hasSlackToken'), 'true', 'false')]"
-                },
-                {
-                  "name": "WHATSAPP_ENABLED",
-                  "value": "[if(variables('hasWhatsAppToken'), 'true', 'false')]"
-                },
-                {
-                  "name": "AUTO_ENABLE_PLATFORMS",
-                  "value": "true"
-                },
-                {
-                  "name": "OPENCLAW_AUTO_DOCTOR",
-                  "value": "true"
-                },
-                {
-                  "name": "SKIP_SETUP_WIZARD",
-                  "value": "true"
                 }
               ],
               "resources": {
