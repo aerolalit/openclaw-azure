@@ -746,6 +746,34 @@
                 {
                   "name": "HOST",
                   "value": "0.0.0.0"
+                },
+                {
+                  "name": "DISCORD_ENABLED",
+                  "value": "[if(variables('hasDiscordToken'), 'true', 'false')]"
+                },
+                {
+                  "name": "TELEGRAM_ENABLED", 
+                  "value": "[if(variables('hasTelegramToken'), 'true', 'false')]"
+                },
+                {
+                  "name": "SLACK_ENABLED",
+                  "value": "[if(variables('hasSlackToken'), 'true', 'false')]"
+                },
+                {
+                  "name": "WHATSAPP_ENABLED",
+                  "value": "[if(variables('hasWhatsAppToken'), 'true', 'false')]"
+                },
+                {
+                  "name": "AUTO_ENABLE_PLATFORMS",
+                  "value": "true"
+                },
+                {
+                  "name": "OPENCLAW_AUTO_DOCTOR",
+                  "value": "true"
+                },
+                {
+                  "name": "SKIP_SETUP_WIZARD",
+                  "value": "true"
                 }
               ],
               "resources": {
