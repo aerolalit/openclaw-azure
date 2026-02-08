@@ -620,6 +620,8 @@
             {
               "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
+              "command": ["/bin/sh"],
+              "args": ["-c", "echo 'Starting OpenClaw...' && openclaw start & OPENCLAW_PID=$! && sleep 15 && echo 'Auto-configuring channels...' && (openclaw channels enable telegram || true) && (openclaw channels enable discord || true) && echo 'OpenClaw ready!' && wait $OPENCLAW_PID"],
               "env": [
                 {
                   "name": "DISCORD_TOKEN",
