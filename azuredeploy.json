@@ -2,13 +2,21 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "metadata": {
-    "description": "Deploy your own OpenClaw AI Assistant to Azure. Creates a private Discord or Telegram bot powered by Claude AI. Cost estimate: $20-30/month. Requires bot token (Discord or Telegram) and Anthropic API key."
+    "description": "Deploy your own OpenClaw AI Assistant to Azure. Creates a private Discord or Telegram bot powered by Claude AI. Cost estimate: $20-30/month. Requires bot token (Discord or Telegram) and Anthropic API key.",
+    "_generator": {
+      "name": "OpenClaw Azure Template",
+      "version": "2.0.0",
+      "description": "Enhanced template with improved token organization and comprehensive validation"
+    }
   },
   "parameters": {
-    "//": "═══════════════════════════════════════════════════════════",
-    "_comment1": "🤖 BOT CONFIGURATION",
-    "//": "═══════════════════════════════════════════════════════════",
-    
+    "_botConfiguration": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "🤖 BOT CONFIGURATION SECTION"
+      }
+    },
     "appName": {
       "type": "string",
       "minLength": 3,
@@ -24,11 +32,13 @@
         "description": "⚠️ REQUIRED CONFIRMATION: Check this box to confirm you have provided either Discord token OR Telegram token below. Your bot will NOT work without at least one token!"
       }
     },
-    
-    "//": "═══════════════════════════════════════════════════════════",
-    "_comment2": "🤝 MESSAGING PLATFORM TOKENS",
-    "//": "═══════════════════════════════════════════════════════════",
-    
+    "_messagingTokens": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "🤝 MESSAGING PLATFORM TOKENS - At least one required"
+      }
+    },
     "discordBotToken": {
       "type": "securestring",
       "defaultValue": "",
@@ -57,11 +67,13 @@
         "description": "OPTIONAL: WhatsApp Business API token. Leave empty if not using WhatsApp integration."
       }
     },
-    
-    "//": "═══════════════════════════════════════════════════════════",
-    "_comment3": "🧠 AI/LLM API KEYS",
-    "//": "═══════════════════════════════════════════════════════════",
-    
+    "_aiApiKeys": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "🧠 AI/LLM API KEYS - Anthropic required, others optional"
+      }
+    },
     "anthropicApiKey": {
       "type": "securestring",
       "minLength": 20,
@@ -90,11 +102,13 @@
         "description": "OPTIONAL: Cohere API key for additional AI models. Leave empty if not needed."
       }
     },
-    
-    "//": "═══════════════════════════════════════════════════════════",
-    "_comment4": "🌐 EXTERNAL SERVICE TOKENS",
-    "//": "═══════════════════════════════════════════════════════════",
-    
+    "_externalServices": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "🌐 EXTERNAL SERVICE TOKENS - All optional"
+      }
+    },
     "elevenlabsApiKey": {
       "type": "securestring",
       "defaultValue": "",
@@ -123,11 +137,13 @@
         "description": "OPTIONAL: Notion API key (secret_...) for Notion integrations. Leave empty if not using Notion."
       }
     },
-    
-    "//": "═══════════════════════════════════════════════════════════",
-    "_comment5": "🔗 GATEWAY & FEDERATION TOKENS",
-    "//": "═══════════════════════════════════════════════════════════",
-    
+    "_federationTokens": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "🔗 GATEWAY & FEDERATION TOKENS - Advanced features"
+      }
+    },
     "gatewayToken": {
       "type": "securestring",
       "defaultValue": "",
@@ -142,11 +158,13 @@
         "description": "OPTIONAL: Webhook authentication secret for incoming integrations. Leave empty if not using webhooks."
       }
     },
-    
-    "//": "═══════════════════════════════════════════════════════════",
-    "_comment6": "⚙️ INFRASTRUCTURE SETTINGS",
-    "//": "═══════════════════════════════════════════════════════════",
-    
+    "_infrastructureSettings": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "⚙️ INFRASTRUCTURE SETTINGS"
+      }
+    },
     "location": {
       "type": "string",
       "defaultValue": "[resourceGroup().location]",
@@ -200,28 +218,21 @@
     "containerEnvironmentName": "[concat(variables('validatedAppName'), '-env')]",
     "logAnalyticsName": "[concat(variables('validatedAppName'), '-logs')]",
     "managedIdentityName": "[concat(variables('validatedAppName'), '-identity')]",
-    
-    "_comment": "Messaging platform token validation",
     "hasDiscordToken": "[not(equals(parameters('discordBotToken'), ''))]",
     "hasTelegramToken": "[not(equals(parameters('telegramBotToken'), ''))]",
     "hasSlackToken": "[not(equals(parameters('slackBotToken'), ''))]",
     "hasWhatsAppToken": "[not(equals(parameters('whatsappToken'), ''))]",
     "hasAtLeastOneMessagingToken": "[or(or(variables('hasDiscordToken'), variables('hasTelegramToken')), or(variables('hasSlackToken'), variables('hasWhatsAppToken')))]",
-    
-    "_comment2": "AI/LLM API key validation",
     "hasAnthropicKey": "[not(equals(parameters('anthropicApiKey'), ''))]",
     "anthropicKeyValid": "[and(variables('hasAnthropicKey'), startsWith(parameters('anthropicApiKey'), 'sk-ant-'))]",
     "hasOpenAIKey": "[not(equals(parameters('openaiApiKey'), ''))]",
     "openaiKeyValid": "[if(variables('hasOpenAIKey'), startsWith(parameters('openaiApiKey'), 'sk-'), true())]",
     "hasGroqKey": "[not(equals(parameters('groqApiKey'), ''))]",
     "groqKeyValid": "[if(variables('hasGroqKey'), startsWith(parameters('groqApiKey'), 'gsk_'), true())]",
-    
-    "_comment3": "External service token validation",
     "hasGitHubToken": "[not(equals(parameters('githubToken'), ''))]",
     "githubTokenValid": "[if(variables('hasGitHubToken'), startsWith(parameters('githubToken'), 'ghp_'), true())]",
     "hasNotionKey": "[not(equals(parameters('notionApiKey'), ''))]",
     "notionKeyValid": "[if(variables('hasNotionKey'), startsWith(parameters('notionApiKey'), 'secret_'), true())]",
-    
     "validatedAppName": "[if(and(and(parameters('confirmTokensProvided'), variables('hasAtLeastOneMessagingToken')), and(variables('anthropicKeyValid'), and(variables('openaiKeyValid'), and(variables('groqKeyValid'), and(variables('githubTokenValid'), variables('notionKeyValid')))))), parameters('appName'), 'ERROR-Invalid-tokens-or-confirmation')]"
   },
   "resources": [
