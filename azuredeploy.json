@@ -613,7 +613,7 @@
             {
               "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
-              "command": ["/bin/sh", "-c", "mkdir -p /workspace && echo 'channels:' > /workspace/config.yaml && ([ '$DISCORD_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  discord: {enabled: true, groupPolicy: open, dm: {enabled: true, policy: open, allowFrom: [\"*\"]}}' >> /workspace/config.yaml || true) && ([ '$TELEGRAM_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  telegram: {enabled: true}' >> /workspace/config.yaml || true) && ([ '$SLACK_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  slack: {enabled: true}' >> /workspace/config.yaml || true) && echo 'Generated config:' && cat /workspace/config.yaml && node dist/index.js gateway --port 18789 --bind all --allow-unconfigured"],
+              "command": ["/bin/sh", "-c", "mkdir -p /workspace && echo 'channels:' > /workspace/config.yaml && ([ '$DISCORD_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  discord: {enabled: true, groupPolicy: open, dm: {enabled: true, policy: open, allowFrom: [\"*\"]}}' >> /workspace/config.yaml || true) && ([ '$TELEGRAM_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  telegram: {enabled: true}' >> /workspace/config.yaml || true) && ([ '$SLACK_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  slack: {enabled: true}' >> /workspace/config.yaml || true) && echo 'Generated config:' && cat /workspace/config.yaml && node dist/index.js gateway --port 18789 --bind lan --allow-unconfigured"],
               "env": [
                 {
                   "name": "DISCORD_BOT_TOKEN",
@@ -741,7 +741,7 @@
                 },
                 {
                   "name": "OPENCLAW_GATEWAY_BIND",
-                  "value": "all"
+                  "value": "lan"
                 },
                 {
                   "name": "HOST",
