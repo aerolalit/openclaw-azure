@@ -230,6 +230,13 @@ The deployment form is now organized into clear sections:
 - Ensure app name is 3-12 characters, letters/numbers only
 - Try a different Azure region
 
+**"Unexpected content after function call" error?**
+- ✅ **FIXED** - This was a JSON syntax issue that has been resolved
+- Make sure you're using the latest template (clear browser cache)
+- See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for details
+
+For more issues, see the complete **[🔧 Troubleshooting Guide](./TROUBLESHOOTING.md)**
+
 ---
 
 ## 🛠 Advanced Usage
@@ -263,9 +270,10 @@ See [TOKEN-ORGANIZATION.md](./TOKEN-ORGANIZATION.md) for detailed documentation.
 
 ## 🤝 Support
 
+- 🔧 **Troubleshooting**: [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) - Common issues and solutions
 - 🐛 **Bug Reports**: [GitHub Issues](https://github.com/aerolalit/openclaw-azure/issues)
 - 💬 **Questions**: [GitHub Discussions](https://github.com/aerolalit/openclaw-azure/discussions)
-- 📖 **Documentation**: [Wiki](https://github.com/aerolalit/openclaw-azure/wiki)
+- 📖 **Documentation**: [TOKEN-ORGANIZATION.md](./TOKEN-ORGANIZATION.md) - Token guide
 
 ---
 
