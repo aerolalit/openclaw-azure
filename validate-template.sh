@@ -62,7 +62,7 @@ echo
 # Check for the specific fixes we made
 echo "🔍 Verifying OpenClaw-specific fixes..."
 
-if grep -q '"command": \["node", "dist/index.js"\]' azuredeploy.json; then
+if grep -q '"command": \["openclaw", "gateway"\]' azuredeploy.json; then
     echo "✅ Correct container startup command found"
 else
     echo "❌ Container startup command may be incorrect"
