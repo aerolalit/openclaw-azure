@@ -613,7 +613,7 @@
             {
               "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
-              "command": ["node", "dist/index.js"],
+              "command": ["node", "dist/index.js", "gateway", "--port", "18789"],
               "env": [
                 {
                   "name": "DISCORD_BOT_TOKEN",
@@ -690,6 +690,18 @@
                 {
                   "name": "OPENCLAW_START_GATEWAY",
                   "value": "true"
+                },
+                {
+                  "name": "OPENCLAW_GATEWAY_PORT",
+                  "value": "18789"
+                },
+                {
+                  "name": "NODE_ENV",
+                  "value": "production"
+                },
+                {
+                  "name": "OPENCLAW_AUTO_START",
+                  "value": "gateway"
                 },
                 {
                   "name": "HAS_DISCORD_TOKEN",
