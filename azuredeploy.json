@@ -613,7 +613,7 @@
             {
               "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
-              "command": ["node", "dist/index.js", "gateway", "--port", "18789"],
+              "command": ["node", "dist/index.js", "gateway", "--port", "18789", "--allow-unconfigured"],
               "env": [
                 {
                   "name": "DISCORD_BOT_TOKEN",
@@ -718,6 +718,18 @@
                 {
                   "name": "HAS_WHATSAPP_TOKEN",
                   "value": "[variables('hasWhatsAppToken')]"
+                },
+                {
+                  "name": "GATEWAY_MODE",
+                  "value": "local"
+                },
+                {
+                  "name": "OPENCLAW_ALLOW_UNCONFIGURED",
+                  "value": "true"
+                },
+                {
+                  "name": "AUTO_START_GATEWAY",
+                  "value": "true"
                 }
               ],
               "resources": {
