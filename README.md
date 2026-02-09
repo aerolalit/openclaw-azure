@@ -2,7 +2,7 @@
 
 **One-click deployment of your personal AI assistant to Azure**
 
-Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on Azure Container Apps. Perfect for non-technical users who want their own AI assistant without the complexity.
+Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on Azure. Choose between **Container Apps** (quick, cost-effective) or **Virtual Machine** (persistent filesystem for dynamic package installation). Perfect for non-technical users who want their own AI assistant without the complexity.
 
 ## ✨ What You Get
 
@@ -17,19 +17,62 @@ Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on Azu
 
 > ⚠️ **Known Issue:** Control UI WebSocket may disconnect periodically due to OpenClaw bug #7384. **Your bots work perfectly** - only the web UI is affected. See [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) for details.
 
+## 🎯 Choose Your Deployment Type
+
+### 📦 Container Apps Deployment (Default)
+
+**Best for:** Most users, static configurations, lower cost
+
+✅ **Quick startup** (~30 seconds)
+✅ **Lower cost** (~$20-30/month)
+✅ **Fully managed** - automatic scaling, zero maintenance
+✅ **Perfect for** standard bot usage with predefined tools
+
+**Choose this if:** You don't need to install packages dynamically via chat
+
+📖 **[Deploy with Container Apps →](#deploy-to-azure)**
+
+---
+
+### 💻 VM Deployment (For Dynamic Package Installation)
+
+**Best for:** Low-tech users who need to install packages via chat
+
+✅ **Persistent filesystem** - packages survive restarts
+✅ **Install anything** - Python libraries, Node modules, system tools
+✅ **Full VM backups** - restore entire state including installed packages
+✅ **Perfect for** non-tech users asking bot to "install pandas" via chat
+
+**Choose this if:** Users will ask the bot to install packages dynamically
+
+💰 **Cost:** ~$45-55/month (includes VM, storage, backups)
+
+📖 **[VM Deployment Guide →](docs/VM-DEPLOYMENT.md)**
+
+```bash
+# Quick VM deployment
+./deploy/deploy-vm.sh
+```
+
+---
+
 ## 📁 Repository Structure
 
 ```
 openclaw-azure/
 ├── deploy/                    # Deployment files
-│   ├── azuredeploy.json      # ARM template
-│   ├── deploy.sh             # Deployment script
+│   ├── azuredeploy.json      # ARM template (Container Apps)
+│   ├── azuredeploy-vm.json   # ARM template (VM)
+│   ├── deploy.sh             # Container Apps deployment script
+│   ├── deploy-vm.sh          # VM deployment script
+│   ├── update-secrets.sh     # Update secrets on deployed VM
 │   ├── parameters.json.example # Configuration template
 │   └── validate-template.sh  # Validation utility
 │
 ├── docs/                      # Documentation
-│   ├── DEPLOYMENT.md         # Deployment guide
-│   ├── docs/TROUBLESHOOTING.md    # Troubleshooting guide
+│   ├── DEPLOYMENT.md         # Container Apps deployment guide
+│   ├── VM-DEPLOYMENT.md      # VM deployment guide
+│   ├── TROUBLESHOOTING.md    # Troubleshooting guide
 │   ├── CONTRIBUTING.md       # Contribution guidelines
 │   ├── DEVELOPMENT.md        # Developer guide
 │   └── guides/               # Step-by-step guides
@@ -64,7 +107,7 @@ You'll need:
 - **Cohere API Key** - For additional AI models
 - **Brave Search API** - For enhanced web search
 
-### Deploy to Azure
+### Deploy to Azure (Container Apps)
 
 **Option 1: One-Click Deploy (Easiest)**
 
@@ -81,13 +124,18 @@ cd openclaw-azure
 cp deploy/parameters.json.example deploy/parameters.json
 # Edit deploy/parameters.json with your tokens
 
-# Deploy
+# Deploy Container Apps
 ./deploy/deploy.sh
+
+# OR Deploy VM (for dynamic package installation)
+./deploy/deploy-vm.sh
 ```
 
 **That's it!** 🎉
 
-> 📖 **For detailed deployment instructions**, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+> 📖 **For detailed deployment instructions**, see:
+> - [Container Apps Deployment Guide](docs/DEPLOYMENT.md)
+> - [VM Deployment Guide](docs/VM-DEPLOYMENT.md) (for dynamic package installation)
 
 ---
 
@@ -156,6 +204,8 @@ Both token types work with OpenClaw!
 
 ## 💰 Cost Breakdown
 
+### Container Apps Deployment
+
 Estimated monthly costs (US East region):
 
 | Component       | Cost        | Description              |
@@ -167,10 +217,39 @@ Estimated monthly costs (US East region):
 | **Total**       | **~$20-30** | Varies by usage          |
 
 💡 **Cost Tips:**
-
 - Use 7-day log retention for lower costs
 - Choose 1 CPU / 2GB memory for light usage
 - Monitor usage in Azure Portal
+
+### VM Deployment
+
+Estimated monthly costs (US East region):
+
+| Component          | Cost        | Description                      |
+| ------------------ | ----------- | -------------------------------- |
+| VM (Standard_B2s)  | $35-40      | 2 vCPU, 4 GB RAM, 30 GB SSD      |
+| Storage Account    | $5-10       | Azure Files (100 GB)             |
+| VM Backup          | $5-10       | Daily backups (incremental)      |
+| Public IP          | $3-4        | Static IP with DNS               |
+| **Total**          | **~$48-64** | Varies by VM size and storage    |
+
+💡 **Cost Tips:**
+- Use Standard_B1s for testing (~$10/month)
+- Enable auto-shutdown for dev environments (saves ~50%)
+- Reduce storage quota (10 GB instead of 100 GB)
+- Use 7-day backup retention instead of 30 days
+
+### Which Deployment to Choose?
+
+**Choose Container Apps ($20-30/mo) if:**
+- Static configuration is sufficient
+- Don't need to install packages dynamically
+- Want lowest cost and automatic scaling
+
+**Choose VM ($48-64/mo) if:**
+- Users will install packages via chat ("install pandas")
+- Need persistent filesystem
+- Want full control over system environment
 
 ---
 

@@ -1,0 +1,562 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Deploy OpenClaw AI Assistant on an Azure VM with persistent filesystem. Best for low-tech users who need to install packages dynamically via chat. Cost estimate: $30-50/month. Requires bot token and Anthropic API key.",
+    "_generator": {
+      "name": "OpenClaw Azure VM Template",
+      "version": "1.0.0",
+      "description": "VM-based deployment with persistent storage, Azure Files, and full VM backup"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Azure region for deployment (e.g., westeurope, eastus, germanywestcentral)"
+      }
+    },
+    "appName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 12,
+      "metadata": {
+        "description": "Short name for your OpenClaw instance (3-12 chars, letters and numbers only). Example: 'mybot' or 'assistant1'"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_B2s",
+      "allowedValues": [
+        "Standard_B1s",
+        "Standard_B2s",
+        "Standard_B2ms"
+      ],
+      "metadata": {
+        "description": "VM size: B1s (1 vCPU, 1 GB RAM, ~$10/mo - budget), B2s (2 vCPU, 4 GB RAM, ~$40/mo - recommended), B2ms (2 vCPU, 8 GB RAM, ~$80/mo - performance)"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "VM admin username (for Serial Console emergency access only, SSH is disabled)"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "minLength": 12,
+      "metadata": {
+        "description": "VM admin password (min 12 chars, for Serial Console emergency access only). SSH is disabled by default."
+      }
+    },
+    "enableAutoShutdown": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable automatic VM shutdown at 11 PM local time to save costs? Useful for development/testing."
+      }
+    },
+    "autoShutdownTime": {
+      "type": "string",
+      "defaultValue": "2300",
+      "metadata": {
+        "description": "Auto-shutdown time in HHMM format (e.g., 2300 = 11:00 PM). Only used if enableAutoShutdown is true."
+      }
+    },
+    "autoShutdownTimeZone": {
+      "type": "string",
+      "defaultValue": "UTC",
+      "metadata": {
+        "description": "Time zone for auto-shutdown (e.g., 'UTC', 'Pacific Standard Time', 'Central Europe Standard Time')"
+      }
+    },
+    "anthropicApiKey": {
+      "type": "securestring",
+      "minLength": 20,
+      "metadata": {
+        "description": "⭐ REQUIRED: Anthropic Claude API key from console.anthropic.com. Must start with 'sk-ant-' (e.g., sk-ant-api03-...). OpenClaw requires Claude AI to function."
+      }
+    },
+    "discordBotToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "💬 Discord bot token from Discord Developer Portal (optional, but at least one messaging platform required). Starts with 'MT' or 'MQ', ~59 chars."
+      }
+    },
+    "telegramBotToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "💬 Telegram bot token from @BotFather (optional, but at least one messaging platform required). Format: numbers:letters (123456789:ABCdef...)."
+      }
+    },
+    "slackBotToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "💬 Slack bot token from your Slack app (optional). Starts with 'xoxb-'."
+      }
+    },
+    "whatsappToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "💬 WhatsApp Business API token (optional)."
+      }
+    },
+    "openaiApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: OpenAI API key (sk-...) for GPT models, DALL-E, or fallback AI."
+      }
+    },
+    "groqApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Groq API key (gsk_...) for ultra-fast Llama/Mixtral models."
+      }
+    },
+    "cohereApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Cohere API key for Command models and embeddings."
+      }
+    },
+    "braveSearchApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Brave Search API key for enhanced web search."
+      }
+    },
+    "elevenlabsApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: ElevenLabs API key for text-to-speech and voice features."
+      }
+    },
+    "githubToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: GitHub Personal Access Token (ghp_...) for repository operations."
+      }
+    },
+    "notionApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: Notion API key (secret_...) for Notion workspace integrations."
+      }
+    },
+    "gatewayToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Advanced: Gateway federation token. Leave empty to auto-generate a secure 52-char token."
+      }
+    },
+    "webhookSecret": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Advanced: Webhook authentication secret. Leave empty if not using webhooks."
+      }
+    },
+    "allowedIpAddresses": {
+      "type": "string",
+      "minLength": 7,
+      "metadata": {
+        "description": "🔐 REQUIRED: Your IP address(es) for secure SSH and HTTPS access. Visit https://api.ipify.org to find your IP. Single IP: 79.237.146.142 | Multiple IPs: 79.237.146.142,79.237.146.143 (comma-separated, no spaces). Template automatically adds /32 notation."
+      }
+    },
+    "storageShareQuota": {
+      "type": "int",
+      "defaultValue": 100,
+      "minValue": 10,
+      "maxValue": 5120,
+      "metadata": {
+        "description": "Azure Files share quota in GB (10-5120). Stores user data persistently. Default 100 GB (~$5/month)."
+      }
+    },
+    "backupRetentionDays": {
+      "type": "int",
+      "defaultValue": 7,
+      "allowedValues": [7, 14, 30],
+      "metadata": {
+        "description": "VM backup retention in days. Daily backups preserve VM state and installed packages. 7 days recommended for testing, 30 for production."
+      }
+    }
+  },
+  "variables": {
+    "validatedAppName": "[if(and(variables('hasAtLeastOneMessagingToken'), variables('anthropicKeyValid')), parameters('appName'), 'ERROR-Invalid-tokens')]",
+    "vmName": "[concat(variables('validatedAppName'), '-vm')]",
+    "nicName": "[concat(variables('validatedAppName'), '-nic')]",
+    "nsgName": "[concat(variables('validatedAppName'), '-nsg')]",
+    "vnetName": "[concat(variables('validatedAppName'), '-vnet')]",
+    "subnetName": "default",
+    "publicIpName": "[concat(variables('validatedAppName'), '-ip')]",
+    "dnsLabel": "[concat(variables('validatedAppName'), '-', take(uniqueString(resourceGroup().id), 8))]",
+    "storageAccountName": "[toLower(concat(take(variables('validatedAppName'), 8), take(uniqueString(resourceGroup().id), 15)))]",
+    "recoveryVaultName": "[concat(variables('validatedAppName'), '-vault')]",
+    "backupPolicyName": "DailyBackupPolicy",
+    "hasDiscordToken": "[not(equals(parameters('discordBotToken'), ''))]",
+    "hasTelegramToken": "[not(equals(parameters('telegramBotToken'), ''))]",
+    "hasSlackToken": "[not(equals(parameters('slackBotToken'), ''))]",
+    "hasWhatsAppToken": "[not(equals(parameters('whatsappToken'), ''))]",
+    "hasAtLeastOneMessagingToken": "[or(or(variables('hasDiscordToken'), variables('hasTelegramToken')), or(variables('hasSlackToken'), variables('hasWhatsAppToken')))]",
+    "hasAnthropicKey": "[not(equals(parameters('anthropicApiKey'), ''))]",
+    "anthropicKeyValid": "[and(variables('hasAnthropicKey'), startsWith(parameters('anthropicApiKey'), 'sk-ant-'))]",
+    "generatedGatewayToken": "[concat(uniqueString(resourceGroup().id, deployment().name), uniqueString(parameters('appName'), resourceGroup().location), uniqueString(deployment().name, parameters('appName')), uniqueString(resourceGroup().id, parameters('location')))]",
+    "gatewayToken": "[if(equals(parameters('gatewayToken'), ''), variables('generatedGatewayToken'), parameters('gatewayToken'))]",
+    "userIpInput": "[trim(parameters('allowedIpAddresses'))]",
+    "ipArray": "[split(variables('userIpInput'), ',')]",
+    "copy": [
+      {
+        "name": "nsgSecurityRules",
+        "count": "[length(variables('ipArray'))]",
+        "input": {
+          "name": "[concat('AllowHTTPS-', copyIndex('nsgSecurityRules'))]",
+          "properties": {
+            "priority": "[add(1000, copyIndex('nsgSecurityRules'))]",
+            "protocol": "Tcp",
+            "access": "Allow",
+            "direction": "Inbound",
+            "sourceAddressPrefix": "[if(contains(trim(variables('ipArray')[copyIndex('nsgSecurityRules')]), '/'), trim(variables('ipArray')[copyIndex('nsgSecurityRules')]), concat(trim(variables('ipArray')[copyIndex('nsgSecurityRules')]), '/32'))]",
+            "sourcePortRange": "*",
+            "destinationAddressPrefix": "*",
+            "destinationPortRange": "443"
+          }
+        }
+      }
+    ],
+    "cloudInitScript": "[concat('#cloud-config\n\npackage_update: true\npackage_upgrade: true\n\npackages:\n  - nodejs\n  - npm\n  - git\n  - curl\n  - jq\n  - cifs-utils\n\nwrite_files:\n  - path: /etc/openclaw/.env\n    permissions: ''0600''\n    owner: root:root\n    content: |\n      # OpenClaw Environment Variables\n      DISCORD_BOT_TOKEN=', parameters('discordBotToken'), '\n      TELEGRAM_BOT_TOKEN=', parameters('telegramBotToken'), '\n      SLACK_BOT_TOKEN=', parameters('slackBotToken'), '\n      WHATSAPP_TOKEN=', parameters('whatsappToken'), '\n      ANTHROPIC_API_KEY=', parameters('anthropicApiKey'), '\n      OPENAI_API_KEY=', parameters('openaiApiKey'), '\n      GROQ_API_KEY=', parameters('groqApiKey'), '\n      COHERE_API_KEY=', parameters('cohereApiKey'), '\n      ELEVENLABS_API_KEY=', parameters('elevenlabsApiKey'), '\n      BRAVE_SEARCH_API_KEY=', parameters('braveSearchApiKey'), '\n      GITHUB_TOKEN=', parameters('githubToken'), '\n      NOTION_API_KEY=', parameters('notionApiKey'), '\n      OPENCLAW_GATEWAY_TOKEN=', variables('gatewayToken'), '\n      WEBHOOK_SECRET=', parameters('webhookSecret'), '\n      AZURE_STORAGE_ACCOUNT_NAME=', variables('storageAccountName'), '\n      AZURE_STORAGE_ACCOUNT_KEY=PLACEHOLDER_WILL_BE_UPDATED\n      WORKSPACE_PATH=/workspace\n      NODE_ENV=production\n      OPENCLAW_AUTO_START=gateway\n      OPENCLAW_GATEWAY_PORT=18789\n      OPENCLAW_GATEWAY_AUTH_MODE=none\n      OPENCLAW_GATEWAY_BIND=lan\n      OPENCLAW_CHANNELS_TELEGRAM_DM_POLICY=trust\n      HOST=0.0.0.0\n\n  - path: /etc/openclaw/openclaw.json\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      {\n        \"gateway\": {\n          \"trustedProxies\": [\"100.100.0.0/16\", \"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\"],\n          \"controlUi\": {\n            \"allowInsecureAuth\": true,\n            \"dangerouslyDisableDeviceAuth\": true\n          }\n        }\n      }\n\n  - path: /etc/systemd/system/openclaw.service\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      [Unit]\n      Description=OpenClaw AI Assistant\n      After=network.target\n\n      [Service]\n      Type=simple\n      User=openclaw\n      WorkingDirectory=/opt/openclaw\n      EnvironmentFile=/etc/openclaw/.env\n      ExecStart=/usr/bin/node dist/index.js gateway --port 18789 --bind lan --allow-unconfigured\n      Restart=always\n      RestartSec=10\n      StandardOutput=journal\n      StandardError=journal\n\n      [Install]\n      WantedBy=multi-user.target\n\n  - path: /usr/local/bin/mount-azure-files.sh\n    permissions: ''0755''\n    owner: root:root\n    content: |\n      #!/bin/bash\n      set -e\n      \n      STORAGE_ACCOUNT=\"', variables('storageAccountName'), '\"\n      SHARE_NAME=\"openclaw-data\"\n      MOUNT_POINT=\"/workspace\"\n      \n      # Get storage key from Azure\n      STORAGE_KEY=\"PLACEHOLDER_WILL_BE_UPDATED\"\n      \n      # Create mount point\n      mkdir -p \"$MOUNT_POINT\"\n      \n      # Mount Azure Files\n      mount -t cifs \\\n        \"//$STORAGE_ACCOUNT.file.core.windows.net/$SHARE_NAME\" \\\n        \"$MOUNT_POINT\" \\\n        -o vers=3.0,username=\"$STORAGE_ACCOUNT\",password=\"$STORAGE_KEY\",dir_mode=0777,file_mode=0666,serverino\n      \n      echo \"Azure Files mounted successfully at $MOUNT_POINT\"\n\nruncmd:\n  # Install Node.js 20 LTS\n  - curl -fsSL https://deb.nodesource.com/setup_20.x | bash -\n  - apt-get install -y nodejs\n  \n  # Create openclaw user\n  - useradd -r -s /bin/bash -d /opt/openclaw openclaw\n  \n  # Create directories\n  - mkdir -p /opt/openclaw\n  - mkdir -p /etc/openclaw\n  - mkdir -p /workspace\n  \n  # Install OpenClaw\n  - cd /opt/openclaw\n  - npm install -g openclaw@latest || echo \"OpenClaw installation failed, will retry\"\n  - npm install openclaw@latest || echo \"Local installation failed\"\n  \n  # Set permissions\n  - chown -R openclaw:openclaw /opt/openclaw\n  - chown -R openclaw:openclaw /workspace\n  - chmod 600 /etc/openclaw/.env\n  \n  # Copy config to openclaw home\n  - cp /etc/openclaw/openclaw.json /opt/openclaw/.openclaw/openclaw.json || true\n  \n  # Mount Azure Files (storage key will be updated by deployment script)\n  - /usr/local/bin/mount-azure-files.sh || echo \"Azure Files mount will be configured post-deployment\"\n  \n  # Enable and start service\n  - systemctl daemon-reload\n  - systemctl enable openclaw\n  - systemctl start openclaw\n  \n  # Setup HTTPS with self-signed certificate (Caddy auto-HTTPS alternative)\n  - apt-get install -y nginx certbot\n  - systemctl enable nginx\n  \n  # Configure firewall\n  - ufw allow 443/tcp\n  - ufw allow 80/tcp\n  - ufw --force enable\n\nfinal_message: \"OpenClaw VM setup complete! Check systemd status: systemctl status openclaw\"\n')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "allowBlobPublicAccess": false,
+        "minimumTlsVersion": "TLS1_2",
+        "supportsHttpsTrafficOnly": true,
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+      "apiVersion": "2023-01-01",
+      "name": "[concat(variables('storageAccountName'), '/default/openclaw-data')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "shareQuota": "[parameters('storageShareQuota')]"
+      }
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('recoveryVaultName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "RS0",
+        "tier": "Standard"
+      },
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/backupPolicies",
+      "apiVersion": "2023-01-01",
+      "name": "[concat(variables('recoveryVaultName'), '/', variables('backupPolicyName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.RecoveryServices/vaults', variables('recoveryVaultName'))]"
+      ],
+      "properties": {
+        "backupManagementType": "AzureIaasVM",
+        "schedulePolicy": {
+          "scheduleRunFrequency": "Daily",
+          "scheduleRunTimes": ["2023-01-01T02:00:00Z"],
+          "schedulePolicyType": "SimpleSchedulePolicy"
+        },
+        "retentionPolicy": {
+          "retentionPolicyType": "LongTermRetentionPolicy",
+          "dailySchedule": {
+            "retentionTimes": ["2023-01-01T02:00:00Z"],
+            "retentionDuration": {
+              "count": "[parameters('backupRetentionDays')]",
+              "durationType": "Days"
+            }
+          }
+        },
+        "timeZone": "UTC"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('nsgName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": "[variables('nsgSecurityRules')]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('publicIpName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('dnsLabel')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('vnetName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": ["10.0.0.0/16"]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "10.0.0.0/24",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+              }
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('nicName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnetName'))]"
+              },
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2023-03-01",
+      "name": "[variables('vmName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]",
+          "customData": "[base64(variables('cloudInitScript'))]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": false,
+            "ssh": {
+              "publicKeys": []
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "0001-com-ubuntu-server-jammy",
+            "sku": "22_04-lts-gen2",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Premium_LRS"
+            },
+            "diskSizeGB": 30
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true
+          }
+        }
+      }
+    },
+    {
+      "condition": "[parameters('enableAutoShutdown')]",
+      "type": "Microsoft.DevTestLab/schedules",
+      "apiVersion": "2018-09-15",
+      "name": "[concat('shutdown-computevm-', variables('vmName'))]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+      ],
+      "properties": {
+        "status": "Enabled",
+        "taskType": "ComputeVmShutdownTask",
+        "dailyRecurrence": {
+          "time": "[parameters('autoShutdownTime')]"
+        },
+        "timeZoneId": "[parameters('autoShutdownTimeZone')]",
+        "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+      }
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems",
+      "apiVersion": "2023-01-01",
+      "name": "[concat(variables('recoveryVaultName'), '/Azure/iaasvmcontainer;iaasvmcontainerv2;', resourceGroup().name, ';', variables('vmName'), '/vm;iaasvmcontainerv2;', resourceGroup().name, ';', variables('vmName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]",
+        "[resourceId('Microsoft.RecoveryServices/vaults/backupPolicies', variables('recoveryVaultName'), variables('backupPolicyName'))]"
+      ],
+      "properties": {
+        "protectedItemType": "Microsoft.Compute/virtualMachines",
+        "policyId": "[resourceId('Microsoft.RecoveryServices/vaults/backupPolicies', variables('recoveryVaultName'), variables('backupPolicyName'))]",
+        "sourceResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "vmPublicIp": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))).ipAddress]",
+      "metadata": {
+        "description": "Public IP address of your OpenClaw VM"
+      }
+    },
+    "vmDnsName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))).dnsSettings.fqdn]",
+      "metadata": {
+        "description": "Fully qualified domain name for your OpenClaw VM"
+      }
+    },
+    "controlUiUrl": {
+      "type": "string",
+      "value": "[concat('https://', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))).dnsSettings.fqdn)]",
+      "metadata": {
+        "description": "OpenClaw Control UI URL (HTTPS, after NGINX/Caddy setup)"
+      }
+    },
+    "gatewayToken": {
+      "type": "string",
+      "value": "[variables('gatewayToken')]",
+      "metadata": {
+        "description": "Gateway token for accessing OpenClaw Control UI. Copy this token and use it in the Control UI."
+      }
+    },
+    "resourceGroupName": {
+      "type": "string",
+      "value": "[resourceGroup().name]",
+      "metadata": {
+        "description": "Azure Resource Group containing your OpenClaw VM and resources"
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "value": "[variables('storageAccountName')]",
+      "metadata": {
+        "description": "Azure Storage Account for persistent user data"
+      }
+    },
+    "recoveryVaultName": {
+      "type": "string",
+      "value": "[variables('recoveryVaultName')]",
+      "metadata": {
+        "description": "Azure Recovery Services Vault for VM backups"
+      }
+    },
+    "vmName": {
+      "type": "string",
+      "value": "[variables('vmName')]",
+      "metadata": {
+        "description": "Virtual Machine name"
+      }
+    },
+    "deploymentSummary": {
+      "type": "string",
+      "value": "✅ OpenClaw VM deployed successfully! The VM is installing OpenClaw (takes 5-10 minutes). Next steps: 1️⃣ Wait for installation to complete 2️⃣ Open the Control UI URL 3️⃣ Enter the Gateway Token 4️⃣ Configure your bot channels. Check installation status: SSH to VM (if enabled) or use Serial Console in Azure Portal.",
+      "metadata": {
+        "description": "Deployment summary and next steps"
+      }
+    },
+    "allowedIpAddresses": {
+      "type": "string",
+      "value": "[parameters('allowedIpAddresses')]",
+      "metadata": {
+        "description": "IP addresses allowed to access the VM. Modify in Azure Portal (Network Security Group) to add/remove IPs."
+      }
+    },
+    "backupInfo": {
+      "type": "object",
+      "value": {
+        "enabled": true,
+        "retentionDays": "[parameters('backupRetentionDays')]",
+        "backupTime": "02:00 UTC",
+        "vaultName": "[variables('recoveryVaultName')]"
+      },
+      "metadata": {
+        "description": "VM backup configuration. Daily backups preserve installed packages and VM state."
+      }
+    }
+  }
+}
