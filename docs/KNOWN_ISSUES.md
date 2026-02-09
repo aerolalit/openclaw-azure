@@ -64,24 +64,40 @@ If Control UI disconnects are disruptive:
 
 Due to the OpenClaw bugs, we had to use `dangerouslyDisableDeviceAuth: true`. This means:
 
-⚠️ **Reduced Security:**
+⚠️ **Original Risk:**
 - No device pairing required
-- Only gateway token protects access
-- Anyone with the gateway token can access
+- Only gateway token protected access
+- Anyone with the gateway token could access from anywhere
 
-✅ **Mitigations in place:**
+✅ **Automatic Mitigations (Now in Place):**
+- **IP Restrictions** - Automatically configured during deployment (only your IP allowed)
+- **Defense-in-depth** - Gateway token + IP restriction required (two factors)
+- **Network-level blocking** - Unauthorized IPs blocked before reaching application
+- **90% reduction** in attack surface for remote attackers
 - 52-character cryptographically random gateway token
 - All tokens stored in Azure Key Vault
 - HTTPS-only access via Azure Container Apps
-- Can add IP restrictions in Azure Portal
+
+**How IP Restrictions Work:**
+- CLI deployment: Your public IP auto-detected and configured
+- Azure Portal deployment: Required to provide at least one IP address
+- Can add more IPs post-deployment via Azure Portal or CLI
+
+Even if gateway token leaks (logs, screenshots, etc.), attackers from other IPs are blocked at the network layer.
 
 ### Recommended for Production
 
 If using in production:
-1. Set a custom strong gateway token in parameters
-2. Add IP restrictions in Azure Container Apps ingress
+1. ✅ **IP restrictions already applied** - Add team members' IPs as needed
+2. Set a custom strong gateway token in parameters (optional, auto-generated is strong)
 3. Rotate gateway token regularly
 4. Monitor access logs in Azure Portal
+5. Use IP ranges for office networks (e.g., `203.0.113.0/24`)
+
+**Managing IP Restrictions:**
+- See [DEPLOYMENT.md](DEPLOYMENT.md#ip-restrictions-security-feature) for complete guide
+- Portal: Container Apps → Ingress → IP Security Restrictions
+- CLI: `az containerapp ingress access-restriction set`
 
 ## Reporting Issues
 

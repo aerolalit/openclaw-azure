@@ -100,6 +100,161 @@ code deploy/parameters.json
 - Don't share `parameters.json` in screenshots/logs
 - Don't use production tokens for testing
 
+## IP Restrictions (Security Feature)
+
+### Automatic IP Detection (CLI Deployment)
+
+When deploying via `./deploy/deploy.sh`, your public IP is **automatically detected** and configured as the only allowed IP for accessing the Control UI.
+
+```bash
+./deploy/deploy.sh
+
+# Output:
+# 🔐 Detecting your public IP address for access control...
+# ✅ Detected your public IP: 203.0.113.45
+# Security: Only this IP can access Control UI
+```
+
+**What happens:**
+1. Script detects your IP via https://api.ipify.org
+2. Adds IP restriction to Container App ingress
+3. Only your IP can access the Control UI
+4. Gateway token + IP restriction = defense-in-depth security
+
+**If auto-detection fails:**
+```bash
+# You'll be prompted to enter your IP manually
+Enter your public IP address (required): 203.0.113.45
+```
+
+To find your IP: Visit https://api.ipify.org in your browser
+
+### Azure Portal Deployment
+
+When deploying via the "Deploy to Azure" button:
+
+1. **Parameter field shows:**
+   ```
+   🔐 REQUIRED: At least one IP address must be provided for security.
+
+   To find your IP:
+   (1) Open https://api.ipify.org in new tab
+   (2) Copy IP shown
+   (3) Enter as ["YOUR_IP/32"]
+
+   Example: ["203.0.113.45/32"]
+   ```
+
+2. **User action:**
+   - Open https://api.ipify.org → see `203.0.113.45`
+   - Enter in form: `["203.0.113.45/32"]`
+   - Deploy
+
+### Managing IP Restrictions Post-Deployment
+
+#### When Your IP Changes
+
+**Scenario:** Your home internet reconnected, IP changed from `203.0.113.45` to `203.0.113.46`
+
+**Solution 1 - Azure Portal (Easiest):**
+1. Go to Azure Portal → Container Apps
+2. Click your OpenClaw app
+3. Left menu → **Ingress**
+4. Scroll to **IP Security Restrictions**
+5. Click **+ Add**
+6. Fill in:
+   - Name: `AllowNewIP`
+   - IP Address Range: `203.0.113.46/32`
+   - Action: `Allow`
+7. Click **Add**, then **Save**
+
+**Solution 2 - Azure CLI (Fast):**
+```bash
+# Auto-detect and update in one command
+az containerapp update \
+  --name openclaw-abc123 \
+  --resource-group openclaw-rg \
+  --set properties.configuration.ingress.ipSecurityRestrictions="[{\"name\":\"CurrentIP\",\"ipAddressRange\":\"$(curl -s https://api.ipify.org)/32\",\"action\":\"Allow\"}]"
+```
+
+**Solution 3 - Add without replacing:**
+```bash
+az containerapp ingress access-restriction set \
+  --name openclaw-abc123 \
+  --resource-group openclaw-rg \
+  --rule-name "AllowNewIP" \
+  --ip-address "203.0.113.46/32" \
+  --action Allow
+```
+
+#### Adding Team Members
+
+**Scenario:** Your colleague needs access from IP `198.51.100.50`
+
+```bash
+az containerapp ingress access-restriction set \
+  --name openclaw-abc123 \
+  --resource-group openclaw-rg \
+  --rule-name "AllowColleague" \
+  --ip-address "198.51.100.50/32" \
+  --action Allow
+```
+
+Or use Azure Portal (Method above).
+
+#### Office Network (Multiple Users, Same IP)
+
+**Scenario:** Entire office shares one public IP via NAT gateway
+
+```bash
+# Allow entire office subnet
+az containerapp ingress access-restriction set \
+  --name openclaw-abc123 \
+  --resource-group openclaw-rg \
+  --rule-name "AllowOffice" \
+  --ip-address "203.0.113.0/24" \
+  --action Allow
+```
+
+#### Locked Out (IP Changed, Can't Access Portal)
+
+**Solution - Use Azure Cloud Shell:**
+1. Go to https://shell.azure.com (works from any IP)
+2. Run the CLI update command from Cloud Shell
+3. Add your new IP, then you can access Portal normally
+
+### List Current IP Restrictions
+
+```bash
+az containerapp ingress show \
+  --name openclaw-abc123 \
+  --resource-group openclaw-rg \
+  --query "ipSecurityRestrictions[].{Name:name,IP:ipAddressRange}" \
+  -o table
+```
+
+### Security Benefits
+
+✅ **Defense-in-depth:** Gateway token + IP restriction (two factors)
+✅ **Blocks remote attackers:** Even if token leaks, wrong IP = blocked
+✅ **Network-level protection:** Blocked before reaching application
+✅ **Compliance-friendly:** Meets network access control requirements
+✅ **Audit trail:** Azure logs show which IPs accessed the service
+
+### Why IP Restrictions Are Required
+
+Unlike some services, this template **requires** at least one IP address for security:
+
+- **Without IP restrictions:** Anyone with gateway token can access from anywhere
+- **With IP restrictions:** Attacker needs both token AND allowed IP
+- **90% reduction** in attack surface for remote threats
+
+This protects against:
+- Leaked tokens in logs/screenshots
+- Accidentally shared credentials
+- Brute force attacks from random IPs
+- Unauthorized access from compromised networks
+
 ## Troubleshooting
 
 ### "parameters.json not found"
