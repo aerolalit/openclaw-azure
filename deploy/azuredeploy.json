@@ -799,7 +799,7 @@
       }
     },
     "allowedIpAddresses": {
-      "type": "array",
+      "type": "string",
       "value": "[parameters('allowedIpAddresses')]",
       "metadata": {
         "description": "IP addresses allowed to access the Control UI. Modify in Azure Portal (Container Apps → Ingress → IP Security Restrictions) to add/remove IPs."
