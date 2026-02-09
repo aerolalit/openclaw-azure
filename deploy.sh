@@ -1,27 +1,31 @@
 #!/bin/bash
 
 # OpenClaw Azure Deployment Script
-# Usage: ./deploy.sh --name "my-openclaw" --discord-token "YOUR_TOKEN" --anthropic-key "YOUR_KEY"
+# Enhanced version: Uses parameters.json + creates timestamped resource groups
+# Usage: ./deploy.sh [OPTIONS]
 
 set -e
 
-# Default values
-LOCATION="eastus"
+# Default values (can be overridden by CLI args or parameters.json)
+LOCATION=""
 RESOURCE_GROUP=""
 APP_NAME=""
-DISCORD_TOKEN=""
-ANTHROPIC_KEY=""
-CONTAINER_CPU="1.0"
-CONTAINER_MEMORY="2Gi"
+CONTAINER_CPU=""
+CONTAINER_MEMORY=""
+LOG_RETENTION=""
+PARAMETERS_FILE="parameters.json"
+CREATE_NEW_GROUP=true
+SKIP_CONFIRM=false
 
-# Color codes for output
+# Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Function to print colored output
+# Helper functions
 print_status() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -38,50 +42,62 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Function to show usage
+print_header() {
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}$1${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
 show_usage() {
-    echo "OpenClaw Azure Deployment Script"
-    echo ""
-    echo "Usage:"
-    echo "  $0 --name APP_NAME --discord-token TOKEN --anthropic-key KEY [OPTIONS]"
-    echo ""
-    echo "Required arguments:"
-    echo "  --name NAME              Name for your OpenClaw instance"
-    echo "  --discord-token TOKEN    Discord bot token"
-    echo "  --anthropic-key KEY      Anthropic Claude API key"
-    echo ""
-    echo "Optional arguments:"
-    echo "  --location LOCATION      Azure region (default: eastus)"
-    echo "  --resource-group RG      Resource group name (default: openclaw-NAME-rg)"
-    echo "  --cpu CPU               Container CPU (default: 1.0)"
-    echo "  --memory MEMORY         Container memory (default: 2Gi)"
-    echo "  --help                   Show this help message"
-    echo ""
-    echo "Example:"
-    echo "  $0 --name \"my-openclaw\" --discord-token \"MT...\" --anthropic-key \"sk-ant-...\""
+    cat << EOF
+OpenClaw Azure Deployment Script
+
+Usage:
+  $0 [OPTIONS]
+
+Description:
+  Deploys OpenClaw to Azure Container Apps using parameters.json.
+  Creates a NEW timestamped resource group by default for clean deployments.
+
+Options:
+  --location LOCATION       Override location from parameters.json
+  --cpu CPU                Override container CPU allocation
+  --memory MEMORY          Override container memory allocation
+  --reuse-group NAME       Reuse existing resource group (no timestamp)
+  --no-confirm             Skip confirmation prompt
+  --help                   Show this help message
+
+Examples:
+  # Simple deployment (uses parameters.json)
+  $0
+
+  # Override location
+  $0 --location eastus
+
+  # Production deployment (reuse same resource group)
+  $0 --reuse-group openclaw-prod-rg
+
+  # Quick deployment without confirmation
+  $0 --no-confirm
+
+Setup:
+  1. Copy parameters.json.example to parameters.json
+  2. Edit parameters.json with your tokens
+  3. Run: $0
+
+Security:
+  - parameters.json is in .gitignore (never commit secrets!)
+  - Use parameters.json.example for the repository
+  - All secrets are stored in Azure Key Vault after deployment
+
+EOF
 }
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --name)
-            APP_NAME="$2"
-            shift 2
-            ;;
-        --discord-token)
-            DISCORD_TOKEN="$2"
-            shift 2
-            ;;
-        --anthropic-key)
-            ANTHROPIC_KEY="$2"
-            shift 2
-            ;;
         --location)
             LOCATION="$2"
-            shift 2
-            ;;
-        --resource-group)
-            RESOURCE_GROUP="$2"
             shift 2
             ;;
         --cpu)
@@ -92,159 +108,203 @@ while [[ $# -gt 0 ]]; do
             CONTAINER_MEMORY="$2"
             shift 2
             ;;
+        --reuse-group)
+            RESOURCE_GROUP="$2"
+            CREATE_NEW_GROUP=false
+            shift 2
+            ;;
+        --no-confirm)
+            SKIP_CONFIRM=true
+            shift
+            ;;
         --help)
             show_usage
             exit 0
             ;;
         *)
             print_error "Unknown option: $1"
+            echo ""
             show_usage
             exit 1
             ;;
     esac
 done
 
-# Validate required arguments
-if [[ -z "$APP_NAME" ]]; then
-    print_error "App name is required. Use --name to specify."
-    show_usage
+# Check if parameters.json exists
+if [ ! -f "$PARAMETERS_FILE" ]; then
+    print_error "parameters.json not found!"
+    echo ""
+    echo "To set up:"
+    echo "  1. cp parameters.json.example parameters.json"
+    echo "  2. Edit parameters.json with your tokens"
+    echo "  3. Run: $0"
+    echo ""
     exit 1
 fi
 
-if [[ -z "$DISCORD_TOKEN" ]]; then
-    print_error "Discord token is required. Use --discord-token to specify."
-    show_usage
-    exit 1
-fi
-
-if [[ -z "$ANTHROPIC_KEY" ]]; then
-    print_error "Anthropic API key is required. Use --anthropic-key to specify."
-    show_usage
-    exit 1
-fi
-
-# Set default resource group name if not provided
-if [[ -z "$RESOURCE_GROUP" ]]; then
-    RESOURCE_GROUP="openclaw-${APP_NAME}-rg"
-fi
-
-# Validate app name (alphanumeric only)
-if [[ ! "$APP_NAME" =~ ^[a-zA-Z0-9]+$ ]]; then
-    print_error "App name must contain only letters and numbers."
-    exit 1
-fi
-
-# Check if Azure CLI is installed
+# Check Azure CLI
 if ! command -v az &> /dev/null; then
-    print_error "Azure CLI is not installed. Please install it first:"
-    echo "https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
+    print_error "Azure CLI is not installed."
+    echo "Install from: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
     exit 1
 fi
 
-# Check if logged in to Azure
+# Check if logged in
 print_status "Checking Azure CLI login status..."
 if ! az account show &> /dev/null; then
-    print_error "Not logged in to Azure CLI. Please run 'az login' first."
+    print_error "Not logged in to Azure CLI."
+    echo "Run: az login"
     exit 1
 fi
 
-# Show current subscription
-SUBSCRIPTION_NAME=$(az account show --query "name" --output tsv)
-SUBSCRIPTION_ID=$(az account show --query "id" --output tsv)
-print_status "Using Azure subscription: $SUBSCRIPTION_NAME ($SUBSCRIPTION_ID)"
+# Get subscription info
+SUBSCRIPTION=$(az account show --query "name" -o tsv)
+SUBSCRIPTION_ID=$(az account show --query "id" -o tsv)
 
-# Confirm deployment
+# Read values from parameters.json (only if not overridden by CLI)
+if [ -z "$APP_NAME" ]; then
+    APP_NAME=$(jq -r '.parameters.appName.value' "$PARAMETERS_FILE")
+fi
+
+if [ -z "$LOCATION" ]; then
+    LOCATION=$(jq -r '.parameters.location.value' "$PARAMETERS_FILE")
+fi
+
+if [ -z "$CONTAINER_CPU" ]; then
+    CONTAINER_CPU=$(jq -r '.parameters.containerCpu.value' "$PARAMETERS_FILE")
+fi
+
+if [ -z "$CONTAINER_MEMORY" ]; then
+    CONTAINER_MEMORY=$(jq -r '.parameters.containerMemory.value' "$PARAMETERS_FILE")
+fi
+
+if [ -z "$LOG_RETENTION" ]; then
+    LOG_RETENTION=$(jq -r '.parameters.logRetentionDays.value' "$PARAMETERS_FILE")
+fi
+
+# Generate resource group name if needed
+if [ "$CREATE_NEW_GROUP" = true ]; then
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    RESOURCE_GROUP="openclaw-${APP_NAME}-${TIMESTAMP}-rg"
+fi
+
+# Generate deployment name
+DEPLOYMENT_NAME="openclaw-deploy-$(date +%s)"
+
+# Display deployment info
 echo ""
-print_warning "About to deploy OpenClaw with the following settings:"
-echo "  App Name: $APP_NAME"
-echo "  Location: $LOCATION"
-echo "  Resource Group: $RESOURCE_GROUP"
-echo "  Container CPU: $CONTAINER_CPU"
-echo "  Container Memory: $CONTAINER_MEMORY"
+print_header "🚀 OpenClaw Deployment"
 echo ""
-read -p "Continue with deployment? (y/N): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    print_status "Deployment cancelled."
-    exit 0
+echo -e "${BLUE}Subscription:${NC}      $SUBSCRIPTION"
+echo -e "${BLUE}Resource Group:${NC}    $RESOURCE_GROUP"
+echo -e "${BLUE}Location:${NC}         $LOCATION"
+echo -e "${BLUE}App Name:${NC}         $APP_NAME"
+echo -e "${BLUE}Container CPU:${NC}    $CONTAINER_CPU"
+echo -e "${BLUE}Container Memory:${NC} $CONTAINER_MEMORY"
+echo -e "${BLUE}Log Retention:${NC}    $LOG_RETENTION days"
+echo ""
+
+if [ "$CREATE_NEW_GROUP" = true ]; then
+    print_status "Will create NEW resource group (clean deployment)"
+else
+    print_warning "Will reuse existing resource group: $RESOURCE_GROUP"
+fi
+
+# Confirmation prompt
+if [ "$SKIP_CONFIRM" = false ]; then
+    echo ""
+    read -p "Continue with deployment? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_status "Deployment cancelled."
+        exit 0
+    fi
 fi
 
 # Create resource group
+echo ""
 print_status "Creating resource group: $RESOURCE_GROUP"
-if az group create \
+az group create \
     --name "$RESOURCE_GROUP" \
     --location "$LOCATION" \
-    --output none; then
-    print_success "Resource group created successfully."
-else
-    print_error "Failed to create resource group."
-    exit 1
-fi
+    --output none
 
-# Deploy the ARM template
-print_status "Starting Azure deployment (this may take 5-10 minutes)..."
-DEPLOYMENT_NAME="openclaw-deployment-$(date +%s)"
+print_success "Resource group created"
 
-if az deployment group create \
+# Deploy ARM template
+echo ""
+print_status "Deploying ARM template (this takes ~5-7 minutes)..."
+echo "Press Ctrl+C to cancel"
+echo ""
+
+START_TIME=$(date +%s)
+
+az deployment group create \
     --resource-group "$RESOURCE_GROUP" \
-    --template-file "azuredeploy.json" \
     --name "$DEPLOYMENT_NAME" \
-    --parameters \
-        appName="$APP_NAME" \
-        location="$LOCATION" \
-        discordBotToken="$DISCORD_TOKEN" \
-        anthropicApiKey="$ANTHROPIC_KEY" \
-        containerCpu="$CONTAINER_CPU" \
-        containerMemory="$CONTAINER_MEMORY" \
-    --output none; then
-    print_success "Deployment completed successfully!"
-else
-    print_error "Deployment failed. Check the Azure portal for details."
-    exit 1
-fi
+    --template-file azuredeploy.json \
+    --parameters @"$PARAMETERS_FILE" \
+    --output table
+
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
 
 # Get deployment outputs
-print_status "Retrieving deployment information..."
+echo ""
+print_success "Deployment complete in ${DURATION}s!"
+
 CONTAINER_APP_URL=$(az deployment group show \
     --resource-group "$RESOURCE_GROUP" \
     --name "$DEPLOYMENT_NAME" \
     --query "properties.outputs.containerAppUrl.value" \
-    --output tsv)
+    -o tsv)
 
-KEY_VAULT_NAME=$(az deployment group show \
+GATEWAY_TOKEN=$(az deployment group show \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$DEPLOYMENT_NAME" \
+    --query "properties.outputs.gatewayToken.value" \
+    -o tsv 2>/dev/null || echo "N/A")
+
+KEY_VAULT=$(az deployment group show \
     --resource-group "$RESOURCE_GROUP" \
     --name "$DEPLOYMENT_NAME" \
     --query "properties.outputs.keyVaultName.value" \
-    --output tsv)
+    -o tsv 2>/dev/null || echo "N/A")
 
-STORAGE_ACCOUNT_NAME=$(az deployment group show \
+# Get container app name from resource group
+APP_NAME_OUTPUT=$(az containerapp list \
     --resource-group "$RESOURCE_GROUP" \
-    --name "$DEPLOYMENT_NAME" \
-    --query "properties.outputs.storageAccountName.value" \
-    --output tsv)
+    --query "[0].name" \
+    -o tsv 2>/dev/null || echo "${APP_NAME}-app")
 
-# Display success information
+# Display success info
 echo ""
-echo "🎉 OpenClaw deployment completed successfully!"
+print_header "🎉 Deployment Summary"
 echo ""
-echo "📋 Deployment Summary:"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "App Name:           $APP_NAME"
-echo "Resource Group:     $RESOURCE_GROUP"
-echo "Location:           $LOCATION"
-echo "Container App URL:  $CONTAINER_APP_URL"
-echo "Key Vault:          $KEY_VAULT_NAME"
-echo "Storage Account:    $STORAGE_ACCOUNT_NAME"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo -e "${BLUE}Resource Group:${NC}    $RESOURCE_GROUP"
+echo -e "${BLUE}Container App:${NC}     $APP_NAME_OUTPUT"
+echo -e "${BLUE}URL:${NC}              $CONTAINER_APP_URL"
+if [ "$KEY_VAULT" != "N/A" ]; then
+    echo -e "${BLUE}Key Vault:${NC}         $KEY_VAULT"
+fi
 echo ""
-echo "🚀 Next Steps:"
-echo "1. Go to your Discord server"
-echo "2. Mention your bot: @YourBotName hello"
-echo "3. Your OpenClaw should respond!"
+if [ "$GATEWAY_TOKEN" != "N/A" ] && [ -n "$GATEWAY_TOKEN" ]; then
+    print_header "🔑 Gateway Access Token"
+    echo ""
+    echo -e "${GREEN}$GATEWAY_TOKEN${NC}"
+    echo ""
+    echo "Use this token to access the OpenClaw Control UI"
+    echo ""
+fi
+print_header "📝 Quick Commands"
 echo ""
-echo "📊 Monitor your deployment:"
-echo "Azure Portal: https://portal.azure.com/#@/resource/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
+echo -e "${YELLOW}# View live logs:${NC}"
+echo "az containerapp logs show --name $APP_NAME_OUTPUT --resource-group $RESOURCE_GROUP --follow"
 echo ""
-echo "💰 Expected monthly cost: ~\$20-30 (plus Anthropic API usage)"
+echo -e "${YELLOW}# Check health:${NC}"
+echo "curl $CONTAINER_APP_URL"
 echo ""
-print_success "Happy chatting with your OpenClaw! 🤖"
+echo -e "${YELLOW}# Delete this deployment:${NC}"
+echo "az group delete --name $RESOURCE_GROUP --yes --no-wait"
+echo ""
+print_success "OpenClaw is ready! 🤖"

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName": {
+      "value": "myopenclaw"
+    },
+    "location": {
+      "value": "westeurope"
+    },
+    "discordBotToken": {
+      "value": ""
+    },
+    "telegramBotToken": {
+      "value": ""
+    },
+    "slackBotToken": {
+      "value": ""
+    },
+    "whatsappToken": {
+      "value": ""
+    },
+    "anthropicApiKey": {
+      "value": ""
+    },
+    "openaiApiKey": {
+      "value": ""
+    },
+    "groqApiKey": {
+      "value": ""
+    },
+    "cohereApiKey": {
+      "value": ""
+    },
+    "elevenlabsApiKey": {
+      "value": ""
+    },
+    "braveSearchApiKey": {
+      "value": ""
+    },
+    "githubToken": {
+      "value": ""
+    },
+    "notionApiKey": {
+      "value": ""
+    },
+    "gatewayToken": {
+      "value": ""
+    },
+    "webhookSecret": {
+      "value": ""
+    },
+    "containerCpu": {
+      "value": "1.0"
+    },
+    "containerMemory": {
+      "value": "2Gi"
+    },
+    "logRetentionDays": {
+      "value": 30
+    }
+  }
+}

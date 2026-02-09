@@ -12,6 +12,8 @@ Thumbs.db
 .env*
 secrets/
 config.local.*
+parameters.json
+.claude/
 
 # Azure CLI
 .azure/

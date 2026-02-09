@@ -18,6 +18,7 @@ Before opening an issue:
 3. Use our [issue template](.github/ISSUE_TEMPLATE.md)
 
 ### Good Issues Include:
+
 - Clear description of the problem
 - Environment details (Azure region, deployment method)
 - Steps to reproduce
@@ -27,6 +28,7 @@ Before opening an issue:
 ## 💡 Suggesting Improvements
 
 We welcome suggestions for:
+
 - Better documentation
 - Cost optimization
 - Security improvements
@@ -36,11 +38,13 @@ We welcome suggestions for:
 ## 🛠️ Contributing Code
 
 ### Prerequisites
+
 - Azure CLI installed and configured
 - Basic knowledge of ARM templates
 - Test access to an Azure subscription
 
 ### Areas Where We Need Help
+
 - **Documentation**: Screenshots, step-by-step guides
 - **ARM Templates**: Optimization, new features
 - **Cost Analysis**: Finding cheaper alternatives
@@ -79,6 +83,7 @@ Before submitting a PR:
 - **Link related docs**: Help users find what they need
 
 ### Screenshot Guidelines
+
 - Use consistent browser/UI settings
 - Highlight important buttons/fields
 - Keep sensitive information out of screenshots
@@ -96,6 +101,7 @@ Before submitting a PR:
 ## 📋 Code Style
 
 ### ARM Templates
+
 - Use descriptive variable names
 - Include metadata descriptions for all parameters
 - Add comments for complex logic
@@ -103,6 +109,7 @@ Before submitting a PR:
 - Use latest API versions
 
 ### Documentation
+
 - Use clear, friendly language
 - Avoid technical jargon
 - Include examples
@@ -119,6 +126,7 @@ Before submitting a PR:
 ## 🎉 Recognition
 
 Contributors will be recognized in:
+
 - README.md contributors section
 - Release notes
 - GitHub contributor graphs

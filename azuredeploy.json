@@ -168,11 +168,7 @@
     "containerCpu": {
       "type": "string",
       "defaultValue": "1.0",
-      "allowedValues": [
-        "0.5",
-        "1.0",
-        "2.0"
-      ],
+      "allowedValues": ["0.5", "1.0", "2.0"],
       "metadata": {
         "description": "CPU allocation for the container"
       }
@@ -180,11 +176,7 @@
     "containerMemory": {
       "type": "string",
       "defaultValue": "2Gi",
-      "allowedValues": [
-        "1Gi",
-        "2Gi",
-        "4Gi"
-      ],
+      "allowedValues": ["1Gi", "2Gi", "4Gi"],
       "metadata": {
         "description": "Memory allocation for the container (2Gi recommended for most use cases)"
       }
@@ -192,13 +184,7 @@
     "logRetentionDays": {
       "type": "int",
       "defaultValue": 30,
-      "allowedValues": [
-        7,
-        14,
-        30,
-        60,
-        90
-      ],
+      "allowedValues": [7, 14, 30, 60, 90],
       "metadata": {
         "description": "How long to keep logs in days. Lower values reduce costs. (30 days recommended)"
       }
@@ -266,9 +252,7 @@
       "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
       "apiVersion": "2023-01-01",
       "name": "[concat(variables('storageAccountName'), '/default/openclaw-data')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"],
       "properties": {
         "shareQuota": 10
       }
@@ -292,10 +276,7 @@
             "tenantId": "[subscription().tenantId]",
             "objectId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))).principalId]",
             "permissions": {
-              "secrets": [
-                "get",
-                "list"
-              ]
+              "secrets": ["get", "list"]
             }
           }
         ],
@@ -307,9 +288,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/discord-token')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('discordBotToken'), ''), 'NOT_CONFIGURED', parameters('discordBotToken'))]"
       }
@@ -318,9 +297,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/telegram-token')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('telegramBotToken'), ''), 'NOT_CONFIGURED', parameters('telegramBotToken'))]"
       }
@@ -329,9 +306,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/slack-token')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('slackBotToken'), ''), 'NOT_CONFIGURED', parameters('slackBotToken'))]"
       }
@@ -340,9 +315,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/whatsapp-token')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('whatsappToken'), ''), 'NOT_CONFIGURED', parameters('whatsappToken'))]"
       }
@@ -351,9 +324,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/anthropic-key')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[parameters('anthropicApiKey')]"
       }
@@ -362,9 +333,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/openai-key')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('openaiApiKey'), ''), 'NOT_CONFIGURED', parameters('openaiApiKey'))]"
       }
@@ -373,9 +342,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/groq-key')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('groqApiKey'), ''), 'NOT_CONFIGURED', parameters('groqApiKey'))]"
       }
@@ -384,9 +351,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/cohere-key')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('cohereApiKey'), ''), 'NOT_CONFIGURED', parameters('cohereApiKey'))]"
       }
@@ -395,9 +360,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/elevenlabs-key')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('elevenlabsApiKey'), ''), 'NOT_CONFIGURED', parameters('elevenlabsApiKey'))]"
       }
@@ -406,9 +369,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/brave-search-key')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('braveSearchApiKey'), ''), 'NOT_CONFIGURED', parameters('braveSearchApiKey'))]"
       }
@@ -417,9 +378,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/github-token')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('githubToken'), ''), 'NOT_CONFIGURED', parameters('githubToken'))]"
       }
@@ -428,9 +387,7 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/notion-key')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('notionApiKey'), ''), 'NOT_CONFIGURED', parameters('notionApiKey'))]"
       }
@@ -439,20 +396,16 @@
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/gateway-token')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
-        "value": "[if(equals(parameters('gatewayToken'), ''), concat('local-', uniqueString(resourceGroup().id)), parameters('gatewayToken'))]"
+        "value": "[if(equals(parameters('gatewayToken'), ''), concat(uniqueString(resourceGroup().id, deployment().name), uniqueString(parameters('appName'), resourceGroup().location), uniqueString(deployment().name, parameters('appName')), uniqueString(resourceGroup().id, parameters('location'))), parameters('gatewayToken'))]"
       }
     },
     {
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2023-07-01",
       "name": "[concat(variables('keyVaultName'), '/webhook-secret')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"],
       "properties": {
         "value": "[if(equals(parameters('webhookSecret'), ''), 'NOT_CONFIGURED', parameters('webhookSecret'))]"
       }
@@ -474,9 +427,7 @@
       "apiVersion": "2023-05-01",
       "name": "[variables('containerEnvironmentName')]",
       "location": "[parameters('location')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"
-      ],
+      "dependsOn": ["[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"],
       "properties": {
         "appLogsConfiguration": {
           "destination": "log-analytics",
@@ -621,7 +572,11 @@
             {
               "image": "ghcr.io/openclaw/openclaw:main",
               "name": "openclaw",
-              "command": ["/bin/sh", "-c", "mkdir -p /workspace && echo 'gateway:' > /workspace/config.yaml && echo '  trustedProxies: [\"0.0.0.0/0\"]' >> /workspace/config.yaml && echo '  auth: {mode: none}' >> /workspace/config.yaml && echo '  controlUi:' >> /workspace/config.yaml && echo '    allowInsecureAuth: true' >> /workspace/config.yaml && echo '    dangerouslyDisableDeviceAuth: true' >> /workspace/config.yaml && echo 'channels:' >> /workspace/config.yaml && ([ '$DISCORD_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  discord: {enabled: true, groupPolicy: open, dm: {enabled: true, policy: open, allowFrom: [\"*\"]}}' >> /workspace/config.yaml || true) && ([ '$TELEGRAM_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  telegram: {enabled: true}' >> /workspace/config.yaml || true) && ([ '$SLACK_BOT_TOKEN' != 'NOT_CONFIGURED' ] && echo '  slack: {enabled: true}' >> /workspace/config.yaml || true) && echo 'Generated config:' && cat /workspace/config.yaml && node dist/index.js gateway --port 18789 --bind lan --allow-unconfigured"],
+              "command": [
+                "/bin/sh",
+                "-c",
+                "mkdir -p ~/.openclaw && cat > ~/.openclaw/openclaw.json <<'CONFIGEOF'\n{\n  \"gateway\": {\n    \"trustedProxies\": [\"100.100.0.0/16\", \"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\"],\n    \"controlUi\": {\n      \"allowInsecureAuth\": true,\n      \"dangerouslyDisableDeviceAuth\": true\n    }\n  }\n}\nCONFIGEOF\necho 'Generated config at ~/.openclaw/openclaw.json:' && cat ~/.openclaw/openclaw.json && node dist/index.js gateway --port 18789 --bind lan --allow-unconfigured"
+              ],
               "env": [
                 {
                   "name": "DISCORD_BOT_TOKEN",
@@ -748,7 +703,7 @@
                   "value": "none"
                 },
                 {
-                  "name": "GATEWAY_AUTH_MODE", 
+                  "name": "GATEWAY_AUTH_MODE",
                   "value": "none"
                 },
                 {
@@ -758,6 +713,10 @@
                 {
                   "name": "HOST",
                   "value": "0.0.0.0"
+                },
+                {
+                  "name": "OPENCLAW_GATEWAY_TRUSTED_PROXIES",
+                  "value": "100.100.0.0/16,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
                 }
               ],
               "resources": {
@@ -817,7 +776,7 @@
       }
     },
     "deploymentSummary": {
-      "type": "string", 
+      "type": "string",
       "value": "✅ OpenClaw deployed successfully! Next steps: 1️⃣ Open the Container App URL below 2️⃣ Copy the Gateway Token and paste it in Control UI Settings 3️⃣ Go to Channels tab and enable your platforms (Discord/Telegram/Slack) 4️⃣ Your bots will be online and ready!",
       "metadata": {
         "description": "Next steps after deployment"
@@ -825,9 +784,9 @@
     },
     "gatewayToken": {
       "type": "string",
-      "value": "[if(equals(parameters('gatewayToken'), ''), concat('local-', uniqueString(resourceGroup().id)), parameters('gatewayToken'))]",
+      "value": "[if(equals(parameters('gatewayToken'), ''), concat(uniqueString(resourceGroup().id, deployment().name), uniqueString(parameters('appName'), resourceGroup().location), uniqueString(deployment().name, parameters('appName')), uniqueString(resourceGroup().id, parameters('location'))), parameters('gatewayToken'))]",
       "metadata": {
-        "description": "Gateway token for accessing the OpenClaw Control UI. Copy this token and paste it in the Control UI settings to gain access."
+        "description": "Auto-generated 52-character secure gateway token for accessing the OpenClaw Control UI. Copy this token and paste it in the Control UI settings to gain access."
       }
     },
     "tokensProvided": {
