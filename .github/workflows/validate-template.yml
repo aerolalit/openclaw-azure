@@ -3,10 +3,8 @@ name: Validate ARM Template
 on:
   push:
     branches: [ main ]
-    paths: [ 'deploy/azuredeploy.json' ]
   pull_request:
     branches: [ main ]
-    paths: [ 'deploy/azuredeploy.json' ]
 
 jobs:
   validate:
