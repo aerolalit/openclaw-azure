@@ -185,8 +185,8 @@
         "name": "ipSecurityRestrictions",
         "count": "[length(variables('ipArray'))]",
         "input": {
-          "name": "[concat('AllowIP-', replace(replace(trim(variables('ipArray')[copyIndex()]), '.', '-'), '/', '-'))]",
-          "ipAddressRange": "[if(contains(trim(variables('ipArray')[copyIndex()]), '/'), trim(variables('ipArray')[copyIndex()]), concat(trim(variables('ipArray')[copyIndex()]), '/32'))]",
+          "name": "[concat('AllowIP-', replace(replace(trim(variables('ipArray')[copyIndex('ipSecurityRestrictions')]), '.', '-'), '/', '-'))]",
+          "ipAddressRange": "[if(contains(trim(variables('ipArray')[copyIndex('ipSecurityRestrictions')]), '/'), trim(variables('ipArray')[copyIndex('ipSecurityRestrictions')]), concat(trim(variables('ipArray')[copyIndex('ipSecurityRestrictions')]), '/32'))]",
           "action": "Allow"
         }
       }
