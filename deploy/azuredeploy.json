@@ -146,6 +146,13 @@
       "metadata": {
         "description": "Advanced: Webhook authentication secret for incoming HTTP integrations. Leave empty if not using custom webhooks."
       }
+    },
+    "allowedIpAddresses": {
+      "type": "array",
+      "minLength": 1,
+      "metadata": {
+        "description": "🔐 REQUIRED: At least one IP address must be provided for security. CLI deployment: auto-detected. Azure Portal: (1) Open https://api.ipify.org in new tab, (2) Copy IP, (3) Enter as [\"YOUR_IP/32\"]. Example: [\"203.0.113.45/32\"]. Add more IPs post-deployment via Azure Portal → Container Apps → Ingress → IP Security Restrictions."
+      }
     }
   },
   "variables": {
@@ -517,6 +524,7 @@
             "targetPort": 18789,
             "transport": "auto",
             "allowInsecure": false,
+            "ipSecurityRestrictions": "[if(greater(length(parameters('allowedIpAddresses')), 0), map(parameters('allowedIpAddresses'), lambda('ip', createObject('name', concat('AllowIP-', replace(lambdaVariables('ip'), '/', '-')), 'ipAddressRange', lambdaVariables('ip'), 'action', 'Allow'))), createArray())]",
             "traffic": [
               {
                 "weight": 100,
@@ -775,6 +783,13 @@
       },
       "metadata": {
         "description": "Summary of which tokens and services are configured"
+      }
+    },
+    "allowedIpAddresses": {
+      "type": "array",
+      "value": "[parameters('allowedIpAddresses')]",
+      "metadata": {
+        "description": "IP addresses allowed to access the Control UI. Modify in Azure Portal (Container Apps → Ingress → IP Security Restrictions) to add/remove IPs."
       }
     }
   }

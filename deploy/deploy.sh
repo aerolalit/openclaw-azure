@@ -53,6 +53,16 @@ print_header() {
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 }
 
+# IP detection function
+detect_public_ip() {
+    local ip
+    ip=$(curl -s --max-time 5 https://api.ipify.org 2>/dev/null)
+    if [ -z "$ip" ]; then
+        ip=$(curl -s --max-time 5 https://checkip.amazonaws.com 2>/dev/null | tr -d '[:space:]')
+    fi
+    echo "$ip"
+}
+
 show_usage() {
     cat << EOF
 OpenClaw Azure Deployment Script
@@ -209,6 +219,38 @@ echo -e "${BLUE}Container Memory:${NC} $CONTAINER_MEMORY"
 echo -e "${BLUE}Log Retention:${NC}    $LOG_RETENTION days"
 echo ""
 
+# Detect user's public IP for security restrictions
+echo ""
+print_status "🔐 Detecting your public IP address for access control..."
+USER_IP=$(detect_public_ip)
+
+if [ -z "$USER_IP" ]; then
+    print_error "Could not auto-detect your public IP"
+    print_warning "For security, at least one IP address is REQUIRED"
+    echo ""
+    echo "To find your IP address, visit: https://api.ipify.org"
+    echo ""
+
+    # Keep prompting until user provides an IP
+    while [ -z "$USER_IP" ]; do
+        read -p "Enter your public IP address (required): " MANUAL_IP
+        if [ -n "$MANUAL_IP" ]; then
+            USER_IP="$MANUAL_IP"
+            ALLOWED_IPS="[\"$USER_IP/32\"]"
+            print_success "Using IP: $USER_IP"
+        else
+            print_error "IP address cannot be empty. Deployment requires at least one IP for security."
+            echo ""
+        fi
+    done
+else
+    ALLOWED_IPS="[\"$USER_IP/32\"]"
+    print_success "Detected your public IP: $USER_IP"
+    echo -e "${BLUE}Security:${NC}          Only this IP can access Control UI"
+fi
+
+echo ""
+
 if [ "$CREATE_NEW_GROUP" = true ]; then
     print_status "Will create NEW resource group (clean deployment)"
 else
@@ -249,6 +291,7 @@ az deployment group create \
     --name "$DEPLOYMENT_NAME" \
     --template-file azuredeploy.json \
     --parameters @"$PARAMETERS_FILE" \
+    --parameters allowedIpAddresses="$ALLOWED_IPS" \
     --output table
 
 END_TIME=$(date +%s)
@@ -293,6 +336,37 @@ if [ "$KEY_VAULT" != "N/A" ]; then
     echo -e "${BLUE}Key Vault:${NC}         $KEY_VAULT"
 fi
 echo ""
+
+# Display IP restriction info
+print_header "🔐 Security Configuration"
+echo ""
+echo -e "${GREEN}✅ Only your IP ($USER_IP) can access the Control UI${NC}"
+echo ""
+echo -e "${YELLOW}📍 IP Changed? Add new IP via:${NC}"
+echo ""
+echo -e "${BLUE}Option 1 - Azure Portal (easiest):${NC}"
+echo "  1. Portal → Container Apps → $APP_NAME_OUTPUT"
+echo "  2. Ingress → IP Security Restrictions → Add"
+echo "  3. Enter: Name=\"NewIP\", IP=\"YOUR_NEW_IP/32\", Action=Allow"
+echo "  4. Save"
+echo ""
+echo -e "${BLUE}Option 2 - Azure CLI (fast):${NC}"
+echo "  az containerapp ingress access-restriction set \\"
+echo "    --name $APP_NAME_OUTPUT \\"
+echo "    --resource-group $RESOURCE_GROUP \\"
+echo "    --rule-name \"AllowNewIP\" \\"
+echo "    --ip-address \"YOUR_NEW_IP/32\" \\"
+echo "    --action Allow"
+echo ""
+echo -e "${BLUE}Option 3 - Quick update (auto-detect current IP):${NC}"
+echo "  az containerapp update \\"
+echo "    --name $APP_NAME_OUTPUT \\"
+echo "    --resource-group $RESOURCE_GROUP \\"
+echo "    --set properties.configuration.ingress.ipSecurityRestrictions=\"[{\\\"name\\\":\\\"CurrentIP\\\",\\\"ipAddressRange\\\":\\\"\$(curl -s https://api.ipify.org)/32\\\",\\\"action\\\":\\\"Allow\\\"}]\""
+echo ""
+echo -e "${GREEN}🔒 Defense-in-depth: Both gateway token AND IP restriction required.${NC}"
+echo ""
+
 if [ "$GATEWAY_TOKEN" != "N/A" ] && [ -n "$GATEWAY_TOKEN" ]; then
     print_header "🔑 Gateway Access Token"
     echo ""
