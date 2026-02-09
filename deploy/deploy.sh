@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# OpenClaw Azure Deployment Script
-# Enhanced version: Uses parameters.json + creates timestamped resource groups
+# OpenClaw Azure VM Deployment Script
+# VM-based deployment with persistent filesystem for package installation
 # Usage: ./deploy/deploy.sh [OPTIONS] (from repo root)
 #    or: ./deploy.sh [OPTIONS] (from deploy/ directory)
 
@@ -15,9 +15,12 @@ cd "$SCRIPT_DIR"  # Always run from deploy/ directory
 LOCATION=""
 RESOURCE_GROUP=""
 APP_NAME=""
-CONTAINER_CPU=""
-CONTAINER_MEMORY=""
-LOG_RETENTION=""
+VM_SIZE="Standard_B2s"
+ADMIN_USERNAME="azureuser"
+ADMIN_PASSWORD=""
+ENABLE_AUTO_SHUTDOWN="false"
+STORAGE_SHARE_QUOTA=""
+BACKUP_RETENTION_DAYS=""
 PARAMETERS_FILE="parameters.json"
 CREATE_NEW_GROUP=true
 SKIP_CONFIRM=false
@@ -63,21 +66,29 @@ detect_public_ip() {
     echo "$ip"
 }
 
+# Generate random password
+generate_password() {
+    openssl rand -base64 24 | tr -d "=+/" | cut -c1-20
+}
+
 show_usage() {
     cat << EOF
-OpenClaw Azure Deployment Script
+OpenClaw Azure VM Deployment Script
 
 Usage:
   $0 [OPTIONS]
 
 Description:
-  Deploys OpenClaw to Azure Container Apps using parameters.json.
+  Deploys OpenClaw to an Azure VM with persistent filesystem.
+  Best for low-tech users who need to install packages dynamically via chat.
   Creates a NEW timestamped resource group by default for clean deployments.
 
 Options:
   --location LOCATION       Override location from parameters.json
-  --cpu CPU                Override container CPU allocation
-  --memory MEMORY          Override container memory allocation
+  --vm-size SIZE           VM size (B1s, B2s, B2ms). Default: B2s
+  --admin-username NAME    VM admin username. Default: azureuser
+  --admin-password PASS    VM admin password (min 12 chars). Auto-generated if not provided.
+  --auto-shutdown          Enable automatic VM shutdown at 11 PM UTC
   --reuse-group NAME       Reuse existing resource group (no timestamp)
   --no-confirm             Skip confirmation prompt
   --help                   Show this help message
@@ -86,11 +97,14 @@ Examples:
   # Simple deployment (uses parameters.json)
   $0
 
-  # Override location
-  $0 --location eastus
+  # Override location and VM size
+  $0 --location eastus --vm-size Standard_B2ms
 
   # Production deployment (reuse same resource group)
   $0 --reuse-group openclaw-prod-rg
+
+  # Development with auto-shutdown
+  $0 --auto-shutdown
 
   # Quick deployment without confirmation
   $0 --no-confirm
@@ -102,8 +116,15 @@ Setup:
 
 Security:
   - parameters.json is in .gitignore (never commit secrets!)
-  - Use parameters.json.example for the repository
-  - All secrets are stored in Azure Key Vault after deployment
+  - Secrets are stored directly on VM (simple for non-tech users)
+  - IP restrictions via Network Security Group
+  - SSH disabled by default (Serial Console for emergency access)
+  - Daily VM backups preserve installed packages
+
+VM Sizes:
+  - Standard_B1s:  1 vCPU, 1 GB RAM (~$10/mo)  - Budget
+  - Standard_B2s:  2 vCPU, 4 GB RAM (~$40/mo)  - Recommended
+  - Standard_B2ms: 2 vCPU, 8 GB RAM (~$80/mo)  - Performance
 
 EOF
 }
@@ -115,13 +136,21 @@ while [[ $# -gt 0 ]]; do
             LOCATION="$2"
             shift 2
             ;;
-        --cpu)
-            CONTAINER_CPU="$2"
+        --vm-size)
+            VM_SIZE="$2"
             shift 2
             ;;
-        --memory)
-            CONTAINER_MEMORY="$2"
+        --admin-username)
+            ADMIN_USERNAME="$2"
             shift 2
+            ;;
+        --admin-password)
+            ADMIN_PASSWORD="$2"
+            shift 2
+            ;;
+        --auto-shutdown)
+            ENABLE_AUTO_SHUTDOWN="true"
+            shift
             ;;
         --reuse-group)
             RESOURCE_GROUP="$2"
@@ -164,6 +193,13 @@ if ! command -v az &> /dev/null; then
     exit 1
 fi
 
+# Check jq
+if ! command -v jq &> /dev/null; then
+    print_error "jq is not installed."
+    echo "Install jq to parse JSON files"
+    exit 1
+fi
+
 # Check if logged in
 print_status "Checking Azure CLI login status..."
 if ! az account show &> /dev/null; then
@@ -185,38 +221,44 @@ if [ -z "$LOCATION" ]; then
     LOCATION=$(jq -r '.parameters.location.value' "$PARAMETERS_FILE")
 fi
 
-if [ -z "$CONTAINER_CPU" ]; then
-    CONTAINER_CPU=$(jq -r '.parameters.containerCpu.value' "$PARAMETERS_FILE")
+if [ -z "$STORAGE_SHARE_QUOTA" ]; then
+    STORAGE_SHARE_QUOTA=$(jq -r '.parameters.storageShareQuota.value // 100' "$PARAMETERS_FILE")
 fi
 
-if [ -z "$CONTAINER_MEMORY" ]; then
-    CONTAINER_MEMORY=$(jq -r '.parameters.containerMemory.value' "$PARAMETERS_FILE")
+if [ -z "$BACKUP_RETENTION_DAYS" ]; then
+    BACKUP_RETENTION_DAYS=$(jq -r '.parameters.backupRetentionDays.value // 7' "$PARAMETERS_FILE")
 fi
 
-if [ -z "$LOG_RETENTION" ]; then
-    LOG_RETENTION=$(jq -r '.parameters.logRetentionDays.value' "$PARAMETERS_FILE")
+# Generate admin password if not provided
+if [ -z "$ADMIN_PASSWORD" ]; then
+    ADMIN_PASSWORD=$(generate_password)
+    print_warning "Auto-generated admin password (save this!):"
+    echo -e "${GREEN}$ADMIN_PASSWORD${NC}"
+    echo ""
 fi
 
 # Generate resource group name if needed
 if [ "$CREATE_NEW_GROUP" = true ]; then
     TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-    RESOURCE_GROUP="openclaw-${APP_NAME}-${TIMESTAMP}-rg"
+    RESOURCE_GROUP="openclaw-${APP_NAME}-vm-${TIMESTAMP}-rg"
 fi
 
 # Generate deployment name
-DEPLOYMENT_NAME="openclaw-deploy-$(date +%s)"
+DEPLOYMENT_NAME="openclaw-vm-deploy-$(date +%s)"
 
 # Display deployment info
 echo ""
-print_header "🚀 OpenClaw Deployment"
+print_header "🚀 OpenClaw VM Deployment"
 echo ""
-echo -e "${BLUE}Subscription:${NC}      $SUBSCRIPTION"
-echo -e "${BLUE}Resource Group:${NC}    $RESOURCE_GROUP"
-echo -e "${BLUE}Location:${NC}         $LOCATION"
-echo -e "${BLUE}App Name:${NC}         $APP_NAME"
-echo -e "${BLUE}Container CPU:${NC}    $CONTAINER_CPU"
-echo -e "${BLUE}Container Memory:${NC} $CONTAINER_MEMORY"
-echo -e "${BLUE}Log Retention:${NC}    $LOG_RETENTION days"
+echo -e "${BLUE}Subscription:${NC}         $SUBSCRIPTION"
+echo -e "${BLUE}Resource Group:${NC}       $RESOURCE_GROUP"
+echo -e "${BLUE}Location:${NC}            $LOCATION"
+echo -e "${BLUE}App Name:${NC}            $APP_NAME"
+echo -e "${BLUE}VM Size:${NC}             $VM_SIZE"
+echo -e "${BLUE}Admin Username:${NC}      $ADMIN_USERNAME"
+echo -e "${BLUE}Auto-Shutdown:${NC}       $ENABLE_AUTO_SHUTDOWN"
+echo -e "${BLUE}Storage Quota:${NC}       ${STORAGE_SHARE_QUOTA} GB"
+echo -e "${BLUE}Backup Retention:${NC}    $BACKUP_RETENTION_DAYS days"
 echo ""
 
 # Detect user's public IP for security restrictions
@@ -246,7 +288,7 @@ if [ -z "$USER_IP" ]; then
 else
     ALLOWED_IPS="$USER_IP"
     print_success "Detected your public IP: $USER_IP"
-    echo -e "${BLUE}Security:${NC}          Only this IP can access Control UI"
+    echo -e "${BLUE}Security:${NC}            Only this IP can access VM (HTTPS + IP restriction)"
 fi
 
 echo ""
@@ -278,9 +320,30 @@ az group create \
 
 print_success "Resource group created"
 
+# Create filtered parameters file (remove unsupported params)
+print_status "Preparing VM parameters..."
+VM_PARAMS_FILE=$(mktemp /tmp/openclaw-vm-params.XXXXXX.json)
+trap "rm -f $VM_PARAMS_FILE" EXIT
+
+# Extract only parameters that exist in the VM template
+jq '{
+  "$schema": ."$schema",
+  "contentVersion": .contentVersion,
+  "parameters": (.parameters | with_entries(select(.key | IN(
+    "location", "appName",
+    "anthropicApiKey", "discordBotToken", "telegramBotToken",
+    "slackBotToken", "whatsappToken", "openaiApiKey", "groqApiKey",
+    "cohereApiKey", "braveSearchApiKey", "elevenlabsApiKey",
+    "githubToken", "notionApiKey", "gatewayToken", "webhookSecret",
+    "storageShareQuota", "backupRetentionDays"
+  ))))
+}' "$PARAMETERS_FILE" > "$VM_PARAMS_FILE"
+
+print_success "Parameters prepared"
+
 # Deploy ARM template
 echo ""
-print_status "Deploying ARM template (this takes ~5-7 minutes)..."
+print_status "Deploying Azure VM (this takes ~10-15 minutes)..."
 echo "Press Ctrl+C to cancel"
 echo ""
 
@@ -290,8 +353,12 @@ az deployment group create \
     --resource-group "$RESOURCE_GROUP" \
     --name "$DEPLOYMENT_NAME" \
     --template-file azuredeploy.json \
-    --parameters @"$PARAMETERS_FILE" \
+    --parameters @"$VM_PARAMS_FILE" \
     --parameters allowedIpAddresses="$ALLOWED_IPS" \
+    --parameters vmSize="$VM_SIZE" \
+    --parameters adminUsername="$ADMIN_USERNAME" \
+    --parameters adminPassword="$ADMIN_PASSWORD" \
+    --parameters enableAutoShutdown="$ENABLE_AUTO_SHUTDOWN" \
     --output table
 
 END_TIME=$(date +%s)
@@ -301,11 +368,29 @@ DURATION=$((END_TIME - START_TIME))
 echo ""
 print_success "Deployment complete in ${DURATION}s!"
 
-CONTAINER_APP_URL=$(az deployment group show \
+VM_NAME=$(az deployment group show \
     --resource-group "$RESOURCE_GROUP" \
     --name "$DEPLOYMENT_NAME" \
-    --query "properties.outputs.containerAppUrl.value" \
+    --query "properties.outputs.vmName.value" \
     -o tsv)
+
+VM_PUBLIC_IP=$(az deployment group show \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$DEPLOYMENT_NAME" \
+    --query "properties.outputs.vmPublicIp.value" \
+    -o tsv)
+
+VM_DNS_NAME=$(az deployment group show \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$DEPLOYMENT_NAME" \
+    --query "properties.outputs.vmDnsName.value" \
+    -o tsv)
+
+CONTROL_UI_URL=$(az deployment group show \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$DEPLOYMENT_NAME" \
+    --query "properties.outputs.controlUiUrl.value" \
+    -o tsv 2>/dev/null || echo "https://$VM_DNS_NAME")
 
 GATEWAY_TOKEN=$(az deployment group show \
     --resource-group "$RESOURCE_GROUP" \
@@ -313,58 +398,112 @@ GATEWAY_TOKEN=$(az deployment group show \
     --query "properties.outputs.gatewayToken.value" \
     -o tsv 2>/dev/null || echo "N/A")
 
-KEY_VAULT=$(az deployment group show \
+STORAGE_ACCOUNT=$(az deployment group show \
     --resource-group "$RESOURCE_GROUP" \
     --name "$DEPLOYMENT_NAME" \
-    --query "properties.outputs.keyVaultName.value" \
+    --query "properties.outputs.storageAccountName.value" \
     -o tsv 2>/dev/null || echo "N/A")
 
-# Get container app name from resource group
-APP_NAME_OUTPUT=$(az containerapp list \
+RECOVERY_VAULT=$(az deployment group show \
     --resource-group "$RESOURCE_GROUP" \
-    --query "[0].name" \
-    -o tsv 2>/dev/null || echo "${APP_NAME}-app")
+    --name "$DEPLOYMENT_NAME" \
+    --query "properties.outputs.recoveryVaultName.value" \
+    -o tsv 2>/dev/null || echo "N/A")
+
+# Post-deployment: Mount Azure Files on VM and restart container
+echo ""
+print_status "Configuring Azure Files mount on VM..."
+
+STORAGE_KEY=$(az storage account keys list \
+    --resource-group "$RESOURCE_GROUP" \
+    --account-name "$STORAGE_ACCOUNT" \
+    --query "[0].value" \
+    -o tsv)
+
+# Create script to mount Azure Files and add to fstab for persistence
+MOUNT_SCRIPT="#!/bin/bash
+set -e
+
+# Install cifs-utils if not already installed
+apt-get install -y cifs-utils 2>/dev/null || true
+
+# Create mount point
+mkdir -p /workspace
+
+# Create credentials file (secure)
+cat > /etc/openclaw/azure-files-creds <<CREDEOF
+username=${STORAGE_ACCOUNT}
+password=${STORAGE_KEY}
+CREDEOF
+chmod 600 /etc/openclaw/azure-files-creds
+
+# Mount Azure Files
+mount -t cifs //${STORAGE_ACCOUNT}.file.core.windows.net/openclaw-data /workspace -o vers=3.0,credentials=/etc/openclaw/azure-files-creds,dir_mode=0777,file_mode=0666,serverino
+
+# Add to fstab for persistence across reboots
+grep -q 'openclaw-data' /etc/fstab || echo \"//${STORAGE_ACCOUNT}.file.core.windows.net/openclaw-data /workspace cifs vers=3.0,credentials=/etc/openclaw/azure-files-creds,dir_mode=0777,file_mode=0666,serverino 0 0\" >> /etc/fstab
+
+# Restart Docker container to pick up mounted workspace
+docker restart openclaw 2>/dev/null || echo 'Container not ready yet, will use mount on next start'
+
+echo '✅ Azure Files mounted at /workspace and added to fstab'
+"
+
+# Run the mount script on VM via Azure CLI
+print_status "Running mount script on VM (may take 30-60 seconds)..."
+az vm run-command invoke \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$VM_NAME" \
+    --command-id RunShellScript \
+    --scripts "$MOUNT_SCRIPT" \
+    --query "value[0].message" \
+    -o tsv || print_warning "Could not mount Azure Files automatically. Cloud-init may still be running - try again in 5 minutes."
+
+print_success "Post-deployment configuration complete"
 
 # Display success info
 echo ""
 print_header "🎉 Deployment Summary"
 echo ""
-echo -e "${BLUE}Resource Group:${NC}    $RESOURCE_GROUP"
-echo -e "${BLUE}Container App:${NC}     $APP_NAME_OUTPUT"
-echo -e "${BLUE}URL:${NC}              $CONTAINER_APP_URL"
-if [ "$KEY_VAULT" != "N/A" ]; then
-    echo -e "${BLUE}Key Vault:${NC}         $KEY_VAULT"
+echo -e "${BLUE}Resource Group:${NC}       $RESOURCE_GROUP"
+echo -e "${BLUE}VM Name:${NC}              $VM_NAME"
+echo -e "${BLUE}Public IP:${NC}            $VM_PUBLIC_IP"
+echo -e "${BLUE}DNS Name:${NC}             $VM_DNS_NAME"
+echo -e "${BLUE}Control UI URL:${NC}       $CONTROL_UI_URL"
+if [ "$STORAGE_ACCOUNT" != "N/A" ]; then
+    echo -e "${BLUE}Storage Account:${NC}      $STORAGE_ACCOUNT"
+fi
+if [ "$RECOVERY_VAULT" != "N/A" ]; then
+    echo -e "${BLUE}Recovery Vault:${NC}       $RECOVERY_VAULT"
 fi
 echo ""
 
 # Display IP restriction info
 print_header "🔐 Security Configuration"
 echo ""
-echo -e "${GREEN}✅ Only your IP ($USER_IP) can access the Control UI${NC}"
+echo -e "${GREEN}✅ HTTPS enabled (automatic Let's Encrypt certificate via Caddy)${NC}"
+echo -e "${GREEN}✅ Only your IP ($USER_IP) can access the VM${NC}"
+echo -e "${GREEN}✅ SSH is disabled (use Serial Console for emergency access)${NC}"
+echo -e "${GREEN}✅ Secrets stored on VM at /etc/openclaw/.env${NC}"
+echo -e "${GREEN}✅ Daily VM backups enabled (preserves installed packages)${NC}"
 echo ""
 echo -e "${YELLOW}📍 IP Changed? Add new IP via:${NC}"
 echo ""
 echo -e "${BLUE}Option 1 - Azure Portal (easiest):${NC}"
-echo "  1. Portal → Container Apps → $APP_NAME_OUTPUT"
-echo "  2. Ingress → IP Security Restrictions → Add"
-echo "  3. Enter: Name=\"NewIP\", IP=\"YOUR_NEW_IP/32\", Action=Allow"
+echo "  1. Portal → Network Security Groups → ${APP_NAME}-nsg"
+echo "  2. Inbound security rules → Add"
+echo "  3. Enter: Source=IP Address, Source IP=\"YOUR_NEW_IP/32\", Port=443"
 echo "  4. Save"
 echo ""
 echo -e "${BLUE}Option 2 - Azure CLI (fast):${NC}"
-echo "  az containerapp ingress access-restriction set \\"
-echo "    --name $APP_NAME_OUTPUT \\"
+echo "  az network nsg rule create \\"
 echo "    --resource-group $RESOURCE_GROUP \\"
-echo "    --rule-name \"AllowNewIP\" \\"
-echo "    --ip-address \"YOUR_NEW_IP/32\" \\"
-echo "    --action Allow"
-echo ""
-echo -e "${BLUE}Option 3 - Quick update (auto-detect current IP):${NC}"
-echo "  az containerapp update \\"
-echo "    --name $APP_NAME_OUTPUT \\"
-echo "    --resource-group $RESOURCE_GROUP \\"
-echo "    --set properties.configuration.ingress.ipSecurityRestrictions=\"[{\\\"name\\\":\\\"CurrentIP\\\",\\\"ipAddressRange\\\":\\\"\$(curl -s https://api.ipify.org)/32\\\",\\\"action\\\":\\\"Allow\\\"}]\""
-echo ""
-echo -e "${GREEN}🔒 Defense-in-depth: Both gateway token AND IP restriction required.${NC}"
+echo "    --nsg-name ${APP_NAME}-nsg \\"
+echo "    --name AllowNewIP \\"
+echo "    --priority 1100 \\"
+echo "    --source-address-prefixes YOUR_NEW_IP/32 \\"
+echo "    --destination-port-ranges 443 \\"
+echo "    --protocol Tcp --access Allow"
 echo ""
 
 if [ "$GATEWAY_TOKEN" != "N/A" ] && [ -n "$GATEWAY_TOKEN" ]; then
@@ -375,15 +514,76 @@ if [ "$GATEWAY_TOKEN" != "N/A" ] && [ -n "$GATEWAY_TOKEN" ]; then
     echo "Use this token to access the OpenClaw Control UI"
     echo ""
 fi
+
 print_header "📝 Quick Commands"
 echo ""
-echo -e "${YELLOW}# View live logs:${NC}"
-echo "az containerapp logs show --name $APP_NAME_OUTPUT --resource-group $RESOURCE_GROUP --follow"
+echo -e "${YELLOW}# Check VM cloud-init status (OpenClaw installation):${NC}"
+echo "az vm run-command invoke \\"
+echo "  --resource-group $RESOURCE_GROUP \\"
+echo "  --name $VM_NAME \\"
+echo "  --command-id RunShellScript \\"
+echo "  --scripts 'cloud-init status --wait'"
 echo ""
-echo -e "${YELLOW}# Check health:${NC}"
-echo "curl $CONTAINER_APP_URL"
+echo -e "${YELLOW}# Check OpenClaw service status:${NC}"
+echo "az vm run-command invoke \\"
+echo "  --resource-group $RESOURCE_GROUP \\"
+echo "  --name $VM_NAME \\"
+echo "  --command-id RunShellScript \\"
+echo "  --scripts 'systemctl status openclaw'"
+echo ""
+echo -e "${YELLOW}# View OpenClaw logs:${NC}"
+echo "az vm run-command invoke \\"
+echo "  --resource-group $RESOURCE_GROUP \\"
+echo "  --name $VM_NAME \\"
+echo "  --command-id RunShellScript \\"
+echo "  --scripts 'journalctl -u openclaw -n 50 --no-pager'"
+echo ""
+echo -e "${YELLOW}# Access Serial Console (emergency):${NC}"
+echo "Azure Portal → Virtual Machines → $VM_NAME → Serial Console"
 echo ""
 echo -e "${YELLOW}# Delete this deployment:${NC}"
 echo "az group delete --name $RESOURCE_GROUP --yes --no-wait"
 echo ""
-print_success "OpenClaw is ready! 🤖"
+
+print_header "⏱️  Installation in Progress"
+echo ""
+echo -e "${YELLOW}OpenClaw is being installed via cloud-init (takes 5-10 minutes).${NC}"
+echo ""
+echo "The VM is running, but OpenClaw may not be ready yet."
+echo "Check installation status with the cloud-init command above."
+echo ""
+echo -e "${CYAN}Once installation completes:${NC}"
+echo "  1. Open Control UI: $CONTROL_UI_URL"
+echo "  2. Enter Gateway Token"
+echo "  3. Configure your bot channels"
+echo ""
+
+print_success "OpenClaw VM deployment complete! 🤖"
+
+# Save admin credentials to a file (for user reference)
+CREDS_FILE="${RESOURCE_GROUP}-credentials.txt"
+cat > "$CREDS_FILE" << EOF
+OpenClaw VM Credentials
+=======================
+
+Resource Group: $RESOURCE_GROUP
+VM Name: $VM_NAME
+Admin Username: $ADMIN_USERNAME
+Admin Password: $ADMIN_PASSWORD
+
+Public IP: $VM_PUBLIC_IP
+DNS Name: $VM_DNS_NAME
+Control UI: $CONTROL_UI_URL
+Gateway Token: $GATEWAY_TOKEN
+
+⚠️  KEEP THIS FILE SECURE! Delete after saving credentials elsewhere.
+
+Access:
+- Serial Console: Azure Portal → Virtual Machines → $VM_NAME → Serial Console
+- Logs: Use 'az vm run-command' shown in deployment output
+
+EOF
+
+print_success "Credentials saved to: $CREDS_FILE"
+echo -e "${RED}⚠️  IMPORTANT: Save credentials securely and delete this file!${NC}"
+echo ""

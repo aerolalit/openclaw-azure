@@ -8,7 +8,7 @@ You'll need:
 
 1. **Azure account** with an active subscription
 2. **Bot token** - Choose one:
-   - **Discord bot token** - [Get one here](get-discord-token.md) OR  
+   - **Discord bot token** - [Get one here](get-discord-token.md) OR
    - **Telegram bot token** - [Get one here](get-telegram-token.md)
 3. **Anthropic API key** - [Get one here](get-anthropic-key.md)
 
@@ -16,7 +16,7 @@ You'll need:
 
 Click the big blue button on our main page:
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Faerolalit%2Fopenclaw-azure%2Fmain%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Faerolalit%2Fopenclaw-azure%2Fmain%2Fdeploy%2Fazuredeploy.json)
 
 This will take you to the Azure portal deployment page.
 
@@ -28,7 +28,7 @@ You'll see a form with several fields:
 
 **Subscription**: Choose your Azure subscription (usually there's only one)
 
-**Resource Group**: 
+**Resource Group**:
 - Select "Create new"
 - Name it something like `openclaw-rg`
 
@@ -47,12 +47,9 @@ You'll see a form with several fields:
 
 **Anthropic API Key**: Paste your Claude API key (starts with `sk-ant-...`)
 
-**⚠️ Important:** You must provide at least one bot token (Discord OR Telegram). You can also provide both if you want your bot on both platforms!
+**Allowed IP Addresses**: Enter your public IP address for security. Visit https://api.ipify.org to find it.
 
-### Optional Fields (you can leave these as default)
-
-**Container CPU**: `1.0` (good for most users)
-**Container Memory**: `2Gi` (good for most users)
+**Important:** You must provide at least one bot token (Discord OR Telegram). You can also provide both if you want your bot on both platforms!
 
 ## Step 3: Review and Deploy
 
@@ -62,51 +59,58 @@ You'll see a form with several fields:
 
 ## Step 4: Wait for Deployment
 
-The deployment takes about 5-10 minutes. You'll see a progress screen.
+The deployment takes about 10-15 minutes. The VM needs to:
+- Provision the virtual machine
+- Install Docker and OpenClaw
+- Set up HTTPS with Caddy
+- Configure backups
 
-☕ Perfect time to grab a coffee!
+Perfect time to grab a coffee!
 
-## Step 5: Get Your OpenClaw URL
+## Step 5: Access Your OpenClaw
 
 Once deployment completes:
 
 1. Click **"Go to resource group"**
-2. Find the Container App (has a whale icon 🐳)
-3. Click on it
-4. Look for **"Application Url"** - that's your OpenClaw!
+2. Click on **"Outputs"** in the deployment
+3. Find the **Control UI URL** - that's your OpenClaw!
+4. Copy the **Gateway Token** to access the Control UI
 
 ## Step 6: Test Your OpenClaw
 
 **If you used Discord:**
-1. Go to your Discord server  
+1. Go to your Discord server
 2. Type a message mentioning your bot: `@YourBotName hello`
-3. Your OpenClaw should respond! 🎉
+3. Your OpenClaw should respond!
 
 **If you used Telegram:**
 1. Open Telegram and search for your bot: `@YourBotName`
 2. Type a message like "Hello!"
-3. Your OpenClaw should respond! 🎉
+3. Your OpenClaw should respond!
 
 ## What If Something Goes Wrong?
 
 - Check our [Troubleshooting Guide](troubleshooting.md)
 - [Open a GitHub issue](https://github.com/aerolalit/openclaw-azure/issues)
-- Make sure your Discord token and Anthropic key are correct
+- Make sure your bot tokens and Anthropic key are correct
 
 ## Next Steps
 
 - Invite your OpenClaw to more Discord servers
+- Ask the bot to install packages: "install pandas", "install ffmpeg"
 - Explore what your AI assistant can do
 - Check the [Azure portal](https://portal.azure.com) to monitor costs
 
 ## Cost Management
 
-Your OpenClaw will cost approximately $20-30/month. To monitor costs:
+Your OpenClaw will cost approximately $48-64/month. To monitor costs:
 
 1. Go to [Azure Cost Management](https://portal.azure.com/#view/Microsoft_Azure_CostManagement/Menu/~/costanalysis)
 2. Select your subscription
 3. Filter by your resource group name
 
+**Cost saving tip:** Use `Standard_B1s` VM size for testing (~$10/month).
+
 ---
 
-**Congratulations!** 🎉 You now have your own AI assistant running on Azure!
+**Congratulations!** You now have your own AI assistant running on Azure!

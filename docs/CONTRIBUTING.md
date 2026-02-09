@@ -5,7 +5,7 @@ Thanks for your interest in improving OpenClaw Azure! This project aims to make 
 ## 🎯 Goals
 
 - **Beginner-friendly**: Non-technical users should be able to deploy easily
-- **Cost-effective**: Keep deployment costs around $20-30/month
+- **Cost-effective**: Keep deployment costs reasonable (~$48-64/month)
 - **Reliable**: Deployments should work consistently across Azure regions
 - **Secure**: Follow Azure security best practices
 
@@ -93,7 +93,7 @@ Before submitting a PR:
 ## 🔒 Security Guidelines
 
 - **Never commit secrets** (tokens, API keys, passwords)
-- **Use Azure Key Vault** for all sensitive data
+- **Never expose secrets** in logs, outputs, or public files
 - **Follow least privilege** for managed identities
 - **Keep dependencies updated**
 - **Review ARM templates** for security issues

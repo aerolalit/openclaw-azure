@@ -1,89 +1,22 @@
-# 🚀 OpenClaw Azure
+# OpenClaw Azure
 
 **One-click deployment of your personal AI assistant to Azure**
 
-Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on Azure. Choose between **Container Apps** (quick, cost-effective) or **Virtual Machine** (persistent filesystem for dynamic package installation). Perfect for non-technical users who want their own AI assistant without the complexity.
+Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on an Azure Virtual Machine. Persistent filesystem lets you install packages dynamically via chat. Perfect for non-technical users who want their own AI assistant without the complexity.
 
-## ✨ What You Get
+## What You Get
 
-- 🤖 **Private AI Bot** for Discord, Telegram, Slack, or WhatsApp powered by Claude AI
-- 🧠 **Multi-AI Support** - Anthropic Claude (required) + optional OpenAI, Groq, Cohere
-- 🎙️ **Voice Features** - Optional ElevenLabs integration for text-to-speech
-- 🔒 **Secure** - Automatic IP restrictions + Azure Key Vault + HTTPS-only access
-- 💰 **Cost-Optimized** - Approximately $20-30/month
-- ⚡ **One-Click Deploy** - No coding or DevOps knowledge required
-- 📊 **Persistent Storage** - Your conversations and data are saved
-- 🔗 **Extensible** - GitHub, Notion, and webhook integrations available
+- **Private AI Bot** for Discord, Telegram, Slack, or WhatsApp powered by Claude AI
+- **Multi-AI Support** - Anthropic Claude (required) + optional OpenAI, Groq, Cohere
+- **Voice Features** - Optional ElevenLabs integration for text-to-speech
+- **Persistent Filesystem** - Install packages via chat, they survive restarts
+- **Secure** - Automatic IP restrictions + HTTPS-only + daily VM backups
+- **One-Click Deploy** - No coding or DevOps knowledge required
+- **Extensible** - GitHub, Notion, and webhook integrations available
 
-> ⚠️ **Known Issue:** Control UI WebSocket may disconnect periodically due to OpenClaw bug #7384. **Your bots work perfectly** - only the web UI is affected. See [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) for details.
+> **Known Issue:** Control UI WebSocket may disconnect periodically due to OpenClaw bug #7384. **Your bots work perfectly** - only the web UI is affected. See [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) for details.
 
-## 🎯 Choose Your Deployment Type
-
-### 📦 Container Apps Deployment (Default)
-
-**Best for:** Most users, static configurations, lower cost
-
-✅ **Quick startup** (~30 seconds)
-✅ **Lower cost** (~$20-30/month)
-✅ **Fully managed** - automatic scaling, zero maintenance
-✅ **Perfect for** standard bot usage with predefined tools
-
-**Choose this if:** You don't need to install packages dynamically via chat
-
-📖 **[Deploy with Container Apps →](#deploy-to-azure)**
-
----
-
-### 💻 VM Deployment (For Dynamic Package Installation)
-
-**Best for:** Low-tech users who need to install packages via chat
-
-✅ **Persistent filesystem** - packages survive restarts
-✅ **Install anything** - Python libraries, Node modules, system tools
-✅ **Full VM backups** - restore entire state including installed packages
-✅ **Perfect for** non-tech users asking bot to "install pandas" via chat
-
-**Choose this if:** Users will ask the bot to install packages dynamically
-
-💰 **Cost:** ~$45-55/month (includes VM, storage, backups)
-
-📖 **[VM Deployment Guide →](docs/VM-DEPLOYMENT.md)**
-
-```bash
-# Quick VM deployment
-./deploy/deploy-vm.sh
-```
-
----
-
-## 📁 Repository Structure
-
-```
-openclaw-azure/
-├── deploy/                    # Deployment files
-│   ├── azuredeploy.json      # ARM template (Container Apps)
-│   ├── azuredeploy-vm.json   # ARM template (VM)
-│   ├── deploy.sh             # Container Apps deployment script
-│   ├── deploy-vm.sh          # VM deployment script
-│   ├── update-secrets.sh     # Update secrets on deployed VM
-│   ├── parameters.json.example # Configuration template
-│   └── validate-template.sh  # Validation utility
-│
-├── docs/                      # Documentation
-│   ├── DEPLOYMENT.md         # Container Apps deployment guide
-│   ├── VM-DEPLOYMENT.md      # VM deployment guide
-│   ├── TROUBLESHOOTING.md    # Troubleshooting guide
-│   ├── CONTRIBUTING.md       # Contribution guidelines
-│   ├── DEVELOPMENT.md        # Developer guide
-│   └── guides/               # Step-by-step guides
-│
-├── scripts/                   # Utility scripts
-│   └── cleanup-deployments.sh # Clean up test deployments
-│
-└── README.md                  # You are here!
-```
-
-## 🎯 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -107,11 +40,11 @@ You'll need:
 - **Cohere API Key** - For additional AI models
 - **Brave Search API** - For enhanced web search
 
-### Deploy to Azure (Container Apps)
+### Deploy to Azure
 
 **Option 1: One-Click Deploy (Easiest)**
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Faerolalit%2Fopenclaw-azure%2Fmain%2Fdeploy%2Fazuredeploy.json%3Fv%3D2" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a>
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Faerolalit%2Fopenclaw-azure%2Fmain%2Fdeploy%2Fazuredeploy.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a>
 
 **Option 2: CLI Deploy (For Developers)**
 
@@ -124,22 +57,42 @@ cd openclaw-azure
 cp deploy/parameters.json.example deploy/parameters.json
 # Edit deploy/parameters.json with your tokens
 
-# Deploy Container Apps
+# Deploy
 ./deploy/deploy.sh
-
-# OR Deploy VM (for dynamic package installation)
-./deploy/deploy-vm.sh
 ```
 
-**That's it!** 🎉
+**That's it!**
 
-> 📖 **For detailed deployment instructions**, see:
-> - [Container Apps Deployment Guide](docs/DEPLOYMENT.md)
-> - [VM Deployment Guide](docs/VM-DEPLOYMENT.md) (for dynamic package installation)
+> For detailed deployment instructions, see the [Deployment Guide](docs/VM-DEPLOYMENT.md).
 
 ---
 
-## 📋 Setup Guides
+## Repository Structure
+
+```
+openclaw-azure/
+├── deploy/                    # Deployment files
+│   ├── azuredeploy.json      # ARM template
+│   ├── deploy.sh             # Deployment script
+│   ├── update-secrets.sh     # Update secrets on deployed VM
+│   └── parameters.json.example # Configuration template
+│
+├── docs/                      # Documentation
+│   ├── VM-DEPLOYMENT.md      # Deployment guide
+│   ├── TROUBLESHOOTING.md    # Troubleshooting guide
+│   ├── CONTRIBUTING.md       # Contribution guidelines
+│   ├── DEVELOPMENT.md        # Developer guide
+│   └── guides/               # Step-by-step guides
+│
+├── scripts/                   # Utility scripts
+│   └── cleanup-deployments.sh # Clean up test deployments
+│
+└── README.md                  # You are here!
+```
+
+---
+
+## Setup Guides
 
 ### Discord Setup
 
@@ -202,26 +155,7 @@ Both token types work with OpenClaw!
 
 ---
 
-## 💰 Cost Breakdown
-
-### Container Apps Deployment
-
-Estimated monthly costs (US East region):
-
-| Component       | Cost        | Description              |
-| --------------- | ----------- | ------------------------ |
-| Container Apps  | $15-25      | Main application hosting |
-| Storage Account | $1-2        | Bot workspace and files  |
-| Key Vault       | $1          | Secure secret storage    |
-| Log Analytics   | $2-3        | Monitoring and logs      |
-| **Total**       | **~$20-30** | Varies by usage          |
-
-💡 **Cost Tips:**
-- Use 7-day log retention for lower costs
-- Choose 1 CPU / 2GB memory for light usage
-- Monitor usage in Azure Portal
-
-### VM Deployment
+## Cost Breakdown
 
 Estimated monthly costs (US East region):
 
@@ -233,38 +167,26 @@ Estimated monthly costs (US East region):
 | Public IP          | $3-4        | Static IP with DNS               |
 | **Total**          | **~$48-64** | Varies by VM size and storage    |
 
-💡 **Cost Tips:**
+**Cost Tips:**
 - Use Standard_B1s for testing (~$10/month)
 - Enable auto-shutdown for dev environments (saves ~50%)
 - Reduce storage quota (10 GB instead of 100 GB)
 - Use 7-day backup retention instead of 30 days
 
-### Which Deployment to Choose?
-
-**Choose Container Apps ($20-30/mo) if:**
-- Static configuration is sufficient
-- Don't need to install packages dynamically
-- Want lowest cost and automatic scaling
-
-**Choose VM ($48-64/mo) if:**
-- Users will install packages via chat ("install pandas")
-- Need persistent filesystem
-- Want full control over system environment
-
 ---
 
-## 🔧 Deployment Parameters
+## Deployment Parameters
 
-The deployment form is now organized into clear sections:
+The deployment form is organized into clear sections:
 
-### 🤖 Bot Configuration
+### Bot Configuration
 
 | Parameter          | Description                          | Example           |
 | ------------------ | ------------------------------------ | ----------------- |
 | **App Name**       | Short name for your bot (3-12 chars) | `mybot`           |
-| **Confirm Tokens** | Required safety check                | ✅ Check this box |
+| **Confirm Tokens** | Required safety check                | Check this box    |
 
-### 🤝 Messaging Platform Tokens (At least one required)
+### Messaging Platform Tokens (At least one required)
 
 | Parameter          | Description                   | Example            |
 | ------------------ | ----------------------------- | ------------------ |
@@ -273,7 +195,7 @@ The deployment form is now organized into clear sections:
 | **Slack Token**    | From Slack app (optional)     | `xoxb-...`         |
 | **WhatsApp Token** | Business API token (optional) | Various formats    |
 
-### 🧠 AI/LLM API Keys
+### AI/LLM API Keys
 
 | Parameter         | Description                           | Example            |
 | ----------------- | ------------------------------------- | ------------------ |
@@ -282,7 +204,7 @@ The deployment form is now organized into clear sections:
 | **Groq Key**      | Optional - For fast inference         | `gsk_...`          |
 | **Cohere Key**    | Optional - Additional AI models       | Various formats    |
 
-### 🌐 External Service Tokens (All optional)
+### External Service Tokens (All optional)
 
 | Parameter            | Description             | Example         |
 | -------------------- | ----------------------- | --------------- |
@@ -291,22 +213,14 @@ The deployment form is now organized into clear sections:
 | **GitHub Token**     | Repository interactions | `ghp_...`       |
 | **Notion Key**       | Workspace integrations  | `secret_...`    |
 
-### 🔗 Gateway & Federation (Advanced)
+### Gateway & Federation (Advanced)
 
 | Parameter          | Description               | Example         |
 | ------------------ | ------------------------- | --------------- |
 | **Gateway Token**  | Multi-instance federation | Various formats |
 | **Webhook Secret** | Incoming webhook auth     | Various formats |
 
-### ⚙️ Infrastructure Settings
-
-| Parameter         | Description                 | Example             |
-| ----------------- | --------------------------- | ------------------- |
-| **CPU**           | Container CPU allocation    | `1.0` (recommended) |
-| **Memory**        | Container memory allocation | `2Gi` (recommended) |
-| **Log Retention** | How long to keep logs       | `30` days           |
-
-**⚠️ Important:**
+**Important:**
 
 - At least one messaging platform token is required
 - Anthropic API key is required and must start with `sk-ant-`
@@ -314,7 +228,7 @@ The deployment form is now organized into clear sections:
 
 ---
 
-## 📖 After Deployment
+## After Deployment
 
 ### Check if it's working
 
@@ -328,14 +242,22 @@ The deployment form is now organized into clear sections:
 1. **Open your bot** in Telegram (search for @YourBotName)
 2. **Send a message** like "Hello!" - it should respond
 
-**Both platforms:** 3. **Check logs** using the Container App URL from deployment outputs
+**Check logs:**
+
+```bash
+az vm run-command invoke \
+  --resource-group <your-resource-group> \
+  --name <your-vm-name> \
+  --command-id RunShellScript \
+  --scripts 'docker logs openclaw --tail 50'
+```
 
 ### Troubleshooting
 
 **Discord bot appears offline?**
 
-- Wait 2-3 minutes for startup
-- Check Container App logs in Azure Portal
+- Wait 5-10 minutes for VM provisioning to complete
+- Check VM logs (see above)
 - Verify Discord token is correct
 - Make sure bot has proper permissions in your Discord server
 
@@ -348,7 +270,7 @@ The deployment form is now organized into clear sections:
 **Bot doesn't respond on either platform?**
 
 - Check Anthropic API key is valid
-- Check Container App logs for errors
+- Check VM logs for errors
 - Verify bot tokens are entered correctly
 
 **Form validation errors?**
@@ -361,8 +283,7 @@ The deployment form is now organized into clear sections:
 - **Groq Key**: Should start with `gsk_` (if provided)
 - **GitHub Token**: Should start with `ghp_` (if provided)
 - **Notion Key**: Should start with `secret_` (if provided)
-- **⚠️ Must check confirmation box** and provide at least one messaging platform token
-- If you see validation errors, check the "Errors" panel on the right →
+- Must check confirmation box and provide at least one messaging platform token
 
 **Deployment failed?**
 
@@ -371,44 +292,38 @@ The deployment form is now organized into clear sections:
 - Ensure app name is 3-12 characters, letters/numbers only
 - Try a different Azure region
 
-**"Unexpected content after function call" error?**
-
-- ✅ **FIXED** - This was a JSON syntax issue that has been resolved
-- Make sure you're using the latest template (clear browser cache)
-- See [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) for details
-
-For more issues, see the complete **[🔧 Troubleshooting Guide](./docs/TROUBLESHOOTING.md)**
+For more issues, see the complete **[Troubleshooting Guide](./docs/TROUBLESHOOTING.md)**
 
 ---
 
-## 🔒 Security Features
+## Security Features
 
 ### Automatic IP Restriction (Defense-in-Depth)
 
 Your deployment includes **automatic IP restriction** for enhanced security:
 
-✅ **Auto-detected during deployment** - Your public IP is automatically added as the only allowed IP
-✅ **Defense-in-depth** - Gateway token + IP restriction (two factors required)
-✅ **Network-level protection** - Blocks unauthorized access before reaching the application
-✅ **90% reduction** in attack surface for remote attackers
+- **Auto-detected during deployment** - Your public IP is automatically added as the only allowed IP
+- **Defense-in-depth** - Gateway token + IP restriction (two factors required)
+- **Network-level protection** - Blocks unauthorized access before reaching the application
+- **HTTPS-only** - Automatic Let's Encrypt certificate via Caddy reverse proxy
 
 **How it works:**
 
 1. **CLI Deployment** (`./deploy/deploy.sh`):
    - Script auto-detects your public IP
-   - Configures Container App to only allow your IP
+   - Configures NSG to only allow your IP on port 443
    - Shows your IP in deployment output
 
 2. **Azure Portal Deployment**:
-   - Form prompts you to visit https://api.ipify.org
-   - Copy your IP and enter as `["203.0.113.45/32"]`
-   - Deployment requires at least one IP for security
+   - Form prompts you to enter your IP address
+   - Visit https://api.ipify.org to find your IP
+   - Enter it in the deployment form
 
 **What this protects against:**
-- ❌ Leaked gateway token in logs/screenshots → Attacker blocked (wrong IP)
-- ❌ Accidentally shared credentials → Recipient blocked (wrong IP)
-- ❌ Brute force attacks → Blocked at network layer (wrong IP)
-- ❌ Unauthorized access from compromised networks → Blocked (wrong IP)
+- Leaked gateway token in logs/screenshots → Attacker blocked (wrong IP)
+- Accidentally shared credentials → Recipient blocked (wrong IP)
+- Brute force attacks → Blocked at network layer (wrong IP)
+- Unauthorized access from compromised networks → Blocked (wrong IP)
 
 ### Managing IP Restrictions
 
@@ -416,101 +331,111 @@ Your deployment includes **automatic IP restriction** for enhanced security:
 
 **Option 1 - Azure Portal:**
 ```
-Portal → Container Apps → [your app] → Ingress → IP Security Restrictions → Add
+Portal → Network Security Groups → [your-app]-nsg → Inbound security rules → Add
 ```
 
 **Option 2 - Azure CLI (Quick):**
 ```bash
-az containerapp update \
-  --name openclaw-abc123 \
-  --resource-group openclaw-rg \
-  --set properties.configuration.ingress.ipSecurityRestrictions="[{\"name\":\"CurrentIP\",\"ipAddressRange\":\"$(curl -s https://api.ipify.org)/32\",\"action\":\"Allow\"}]"
+az network nsg rule create \
+  --resource-group <your-resource-group> \
+  --nsg-name <your-app>-nsg \
+  --name AllowNewIP \
+  --priority 1100 \
+  --source-address-prefixes $(curl -s https://api.ipify.org)/32 \
+  --destination-port-ranges 443 \
+  --protocol Tcp --access Allow
 ```
 
 **Option 3 - Add team member:**
 ```bash
-az containerapp ingress access-restriction set \
-  --name openclaw-abc123 \
-  --resource-group openclaw-rg \
-  --rule-name "AllowColleague" \
-  --ip-address "198.51.100.50/32" \
-  --action Allow
+az network nsg rule create \
+  --resource-group <your-resource-group> \
+  --nsg-name <your-app>-nsg \
+  --name AllowColleague \
+  --priority 1101 \
+  --source-address-prefixes 198.51.100.50/32 \
+  --destination-port-ranges 443 \
+  --protocol Tcp --access Allow
 ```
 
-📖 For complete IP restriction management guide, see [docs/DEPLOYMENT.md#ip-restrictions-security-feature](docs/DEPLOYMENT.md#ip-restrictions-security-feature)
+For complete IP restriction management guide, see [docs/VM-DEPLOYMENT.md](docs/VM-DEPLOYMENT.md#2-managing-ip-restrictions).
 
 ### Additional Security Layers
 
-✅ **Azure Key Vault** - All API keys and tokens encrypted at rest
-✅ **HTTPS-Only** - All traffic encrypted in transit
-✅ **Managed Identity** - No hardcoded credentials, Azure handles authentication
-✅ **Secret References** - Tokens passed via secure references, never in logs
-✅ **Regular Rotation** - Easy to rotate tokens via Azure Portal
+- **HTTPS-Only** - Automatic Let's Encrypt certificate via Caddy
+- **IP Restricted** - Only your IP can access the VM
+- **SSH Disabled** - No SSH port open; use Azure Serial Console for emergencies
+- **Secrets on VM** - Stored at `/etc/openclaw/.env`, encrypted at rest
+- **Daily Backups** - Full VM backup including installed packages and secrets
 
 **Security Note:** Due to OpenClaw bug #7384, device pairing is disabled (`dangerouslyDisableDeviceAuth: true`). IP restrictions mitigate this by adding network-level access control. Once OpenClaw fixes the bug, device pairing can be re-enabled for additional security.
 
 ---
 
-## 🛠 Advanced Usage
+## Advanced Usage
 
-### Accessing Your Bot's Web Interface
+### Installing Packages via Chat
 
-After deployment, you'll get a Container App URL. This provides:
+This is the key benefit of the VM deployment. Users can ask the bot directly:
 
-- Real-time logs
-- Health status
-- Performance metrics
+```
+User: Install pandas library
+Bot: [Runs: pip install pandas]
+Bot: Installed successfully!
 
-### Updating Your Bot
+User: Install ffmpeg
+Bot: [Runs: apt-get install ffmpeg]
+Bot: Installed successfully!
+```
 
-- Redeploy with the same parameters to get latest updates
-- Your data and configuration will be preserved
+Packages persist across restarts and are included in daily backups.
+
+### Updating Secrets
+
+```bash
+# Edit parameters.json with new secrets, then:
+./deploy/update-secrets.sh --resource-group <your-resource-group>
+```
 
 ### Backup and Restore
 
-Your bot's data is stored in Azure Storage. To backup:
+Your VM is backed up daily at 2:00 AM UTC. Backups include:
+- OS disk with all configurations
+- Installed packages
+- Secrets in `/etc/openclaw/.env`
 
-1. Download files from the storage account
-2. Redeploy if needed and upload files back
+To restore: Azure Portal → Recovery Services vaults → [your-vault] → Backup Items → Restore VM
 
-### Token Organization
-
-The deployment template now features improved organization:
-
-- **Visual grouping** with clear sections and emoji headers
-- **Enhanced validation** with format checking for all token types
-- **Comprehensive support** for 10+ services out of the box
-- **Security-first design** with all secrets stored in Azure Key Vault
-- **Future-proof structure** for easy addition of new integrations
-
-See [TOKEN-ORGANIZATION.md](./TOKEN-ORGANIZATION.md) for detailed documentation.
+See [docs/VM-DEPLOYMENT.md](docs/VM-DEPLOYMENT.md#backup-and-restore) for details.
 
 ---
 
-## 🤝 Support
+## Support
 
-- 🔧 **Troubleshooting**: [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) - Common issues and solutions
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/aerolalit/openclaw-azure/issues)
-- 💬 **Questions**: [GitHub Discussions](https://github.com/aerolalit/openclaw-azure/discussions)
-- 📖 **Documentation**: [TOKEN-ORGANIZATION.md](./TOKEN-ORGANIZATION.md) - Token guide
+- **Troubleshooting**: [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) - Common issues and solutions
+- **Deployment Guide**: [docs/VM-DEPLOYMENT.md](./docs/VM-DEPLOYMENT.md) - Detailed deployment docs
+- **Bug Reports**: [GitHub Issues](https://github.com/aerolalit/openclaw-azure/issues)
+- **Questions**: [GitHub Discussions](https://github.com/aerolalit/openclaw-azure/discussions)
 
 ---
 
-## 📄 License
+## License
 
 MIT License - feel free to fork and customize!
 
-## ⭐ Contributing
+## Contributing
 
 We welcome contributions! Whether it's:
 
-- 🐛 Bug fixes
-- 📖 Documentation improvements
-- ✨ New features
-- 💡 Ideas and suggestions
+- Bug fixes
+- Documentation improvements
+- New features
+- Ideas and suggestions
+
+See [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) for guidelines.
 
 ---
 
-**Made with ❤️ for the AI community**
+**Made with love for the AI community**
 
 _Want to make AI assistants accessible to everyone, not just developers._

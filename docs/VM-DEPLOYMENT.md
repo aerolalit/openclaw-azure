@@ -1,18 +1,13 @@
-# OpenClaw Azure VM Deployment Guide
+# OpenClaw Azure Deployment Guide
 
-## Why Use VM Deployment?
+## Overview
 
-**Choose VM deployment if:**
-- ✅ **Low-tech/no-tech users** who will ask the bot to install packages via chat
-- ✅ Need **persistent filesystem** that survives restarts
-- ✅ Want to **install system packages** (Python libraries, Node modules, system tools)
-- ✅ Need packages to be **automatically restored** from backup
-- ✅ Want **full control** over the system environment
-
-**Choose Container Apps deployment if:**
-- ❌ Don't need to install packages dynamically
-- ❌ Static configuration is sufficient
-- ❌ Want lowest cost (~$20/month vs ~$40/month for VM)
+OpenClaw deploys on an Azure Virtual Machine with:
+- **Persistent filesystem** - packages survive restarts
+- **Install anything** - Python libraries, Node modules, system tools via chat
+- **Full VM backups** - restore entire state including installed packages
+- **HTTPS** - Automatic Let's Encrypt certificate via Caddy
+- **IP restrictions** - Only your IP can access the VM
 
 ---
 
@@ -44,19 +39,19 @@ code deploy/parameters.json
 
 ```bash
 # Simple deployment (creates new timestamped resource group)
-./deploy/deploy-vm.sh
+./deploy/deploy.sh
 
 # Quick deployment (no confirmation)
-./deploy/deploy-vm.sh --no-confirm
+./deploy/deploy.sh --no-confirm
 
 # Override location
-./deploy/deploy-vm.sh --location eastus
+./deploy/deploy.sh --location eastus
 
 # Production deployment (reuse same resource group)
-./deploy/deploy-vm.sh --reuse-group openclaw-prod-rg
+./deploy/deploy.sh --reuse-group openclaw-prod-rg
 
 # Development with auto-shutdown (saves costs)
-./deploy/deploy-vm.sh --auto-shutdown
+./deploy/deploy.sh --auto-shutdown
 ```
 
 ---
@@ -75,7 +70,7 @@ Choose based on your workload:
 
 ```bash
 # Deploy with specific VM size
-./deploy/deploy-vm.sh --vm-size Standard_B2ms
+./deploy/deploy.sh --vm-size Standard_B2ms
 ```
 
 ### Testing & Development
@@ -83,7 +78,7 @@ Choose based on your workload:
 **Best for:** Trying things out, testing changes
 
 ```bash
-./deploy/deploy-vm.sh --auto-shutdown
+./deploy/deploy.sh --auto-shutdown
 ```
 
 - Creates NEW resource group with timestamp: `openclaw-mybot-vm-20260209-143022-rg`
@@ -96,7 +91,7 @@ Choose based on your workload:
 **Best for:** Long-term deployments, production use
 
 ```bash
-./deploy/deploy-vm.sh --reuse-group openclaw-prod-rg
+./deploy/deploy.sh --reuse-group openclaw-prod-rg
 ```
 
 - Reuses same resource group
@@ -112,10 +107,10 @@ Choose based on your workload:
 
 **Automatic IP Detection:**
 
-When deploying via `./deploy/deploy-vm.sh`, your public IP is **automatically detected** and configured as the only allowed IP for accessing the VM.
+When deploying via `./deploy/deploy.sh`, your public IP is **automatically detected** and configured as the only allowed IP for accessing the VM.
 
 ```bash
-./deploy/deploy-vm.sh
+./deploy/deploy.sh
 
 # Output:
 # 🔐 Detecting your public IP address for access control...
@@ -520,7 +515,7 @@ az login
 1. Check all required tokens are filled in `deploy/parameters.json`
 2. Ensure at least one messaging platform token is provided
 3. Verify Anthropic API key starts with `sk-ant-`
-4. Try a different Azure region: `./deploy/deploy-vm.sh --location westus`
+4. Try a different Azure region: `./deploy/deploy.sh --location westus`
 5. Check Azure subscription quota for VM size
 
 ### OpenClaw Service Not Starting
@@ -625,13 +620,13 @@ az group list --query "[?contains(name, 'openclaw') && contains(name, 'vm')].nam
 
 **1. Use Auto-Shutdown for Development**
 ```bash
-./deploy/deploy-vm.sh --auto-shutdown
+./deploy/deploy.sh --auto-shutdown
 ```
 Saves ~$20/month if VM off 12+ hours/day.
 
 **2. Use Smaller VM for Testing**
 ```bash
-./deploy/deploy-vm.sh --vm-size Standard_B1s
+./deploy/deploy.sh --vm-size Standard_B1s
 ```
 Standard_B1s costs ~$10/month (vs $40 for B2s).
 
@@ -676,29 +671,9 @@ az consumption usage list \
 
 ---
 
-## Comparison: VM vs Container Apps
-
-| Feature | VM Deployment | Container Apps |
-|---------|---------------|----------------|
-| **Persistent filesystem** | ✅ Yes | ❌ No (ephemeral) |
-| **Install packages dynamically** | ✅ Yes | ❌ No |
-| **Packages preserved after restart** | ✅ Yes (always) | ❌ No |
-| **Full VM backup** | ✅ Yes | ❌ N/A |
-| **Best for** | Low-tech users | Static configuration |
-| **Cost** | ~$45-55/month | ~$20-30/month |
-| **Startup time** | ~2 minutes | ~30 seconds |
-| **Scaling** | Manual (resize VM) | Automatic |
-| **Maintenance** | More (OS updates) | Less (managed) |
-
-**Choose VM if:** You need persistent packages that users install via chat.
-
-**Choose Container Apps if:** Static configuration is sufficient and you want lower cost.
-
----
-
 ## Need Help?
 
-- Run `./deploy/deploy-vm.sh --help` for all options
+- Run `./deploy/deploy.sh --help` for all options
 - Check [README.md](../README.md) for general documentation
 - See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
 - Open an issue on GitHub
@@ -711,7 +686,7 @@ az consumption usage list \
 
 The VM uses cloud-init for initial setup. To customize:
 
-1. Modify `azuredeploy-vm.json` → `cloudInitScript` variable
+1. Modify `azuredeploy.json` → `cloudInitScript` variable
 2. Add your custom initialization steps to `runcmd:` section
 3. Redeploy VM
 

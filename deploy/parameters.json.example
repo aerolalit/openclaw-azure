@@ -50,15 +50,6 @@
     "webhookSecret": {
       "value": ""
     },
-    "containerCpu": {
-      "value": "1.0"
-    },
-    "containerMemory": {
-      "value": "2Gi"
-    },
-    "logRetentionDays": {
-      "value": 30
-    },
     "allowedIpAddresses": {
       "value": ""
     }

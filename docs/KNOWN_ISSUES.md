@@ -1,6 +1,6 @@
 # Known Issues
 
-This document lists known issues with OpenClaw on Azure Container Apps and their workarounds.
+This document lists known issues with OpenClaw on Azure and their workarounds.
 
 ## Control UI WebSocket Disconnections
 
@@ -17,7 +17,7 @@ When accessing the OpenClaw Control UI:
 
 ### Root Cause
 
-OpenClaw has a bug with `trustedProxies` configuration (issue #7384) that prevents it from properly handling connections behind reverse proxies like Azure Container Apps' ingress.
+OpenClaw has a bug with `trustedProxies` configuration (issue #7384) that prevents it from properly handling connections behind reverse proxies like Caddy.
 
 ### Workaround
 
@@ -30,18 +30,18 @@ This allows the Control UI to work, but connections may still be unstable.
 
 ### What Works
 
-✅ **All bot platforms work perfectly:**
+**All bot platforms work perfectly:**
 - Discord bot
 - Telegram bot
 - Slack bot
 - WhatsApp bot
 
-✅ **Control UI is accessible:**
+**Control UI is accessible:**
 - Can access with gateway token
 - Can configure settings
 - Can view status
 
-⚠️ **What's affected:**
+**What's affected:**
 - Control UI WebSocket may disconnect periodically
 - Need to refresh/reconnect sometimes
 
@@ -64,19 +64,19 @@ If Control UI disconnects are disruptive:
 
 Due to the OpenClaw bugs, we had to use `dangerouslyDisableDeviceAuth: true`. This means:
 
-⚠️ **Original Risk:**
+**Original Risk:**
 - No device pairing required
 - Only gateway token protected access
 - Anyone with the gateway token could access from anywhere
 
-✅ **Automatic Mitigations (Now in Place):**
+**Automatic Mitigations (Now in Place):**
 - **IP Restrictions** - Automatically configured during deployment (only your IP allowed)
 - **Defense-in-depth** - Gateway token + IP restriction required (two factors)
 - **Network-level blocking** - Unauthorized IPs blocked before reaching application
 - **90% reduction** in attack surface for remote attackers
 - 52-character cryptographically random gateway token
-- All tokens stored in Azure Key Vault
-- HTTPS-only access via Azure Container Apps
+- Secrets stored on VM at `/etc/openclaw/.env` (encrypted at rest)
+- HTTPS-only access via Caddy reverse proxy
 
 **How IP Restrictions Work:**
 - CLI deployment: Your public IP auto-detected and configured
@@ -88,16 +88,16 @@ Even if gateway token leaks (logs, screenshots, etc.), attackers from other IPs 
 ### Recommended for Production
 
 If using in production:
-1. ✅ **IP restrictions already applied** - Add team members' IPs as needed
+1. **IP restrictions already applied** - Add team members' IPs as needed
 2. Set a custom strong gateway token in parameters (optional, auto-generated is strong)
 3. Rotate gateway token regularly
 4. Monitor access logs in Azure Portal
 5. Use IP ranges for office networks (e.g., `203.0.113.0/24`)
 
 **Managing IP Restrictions:**
-- See [DEPLOYMENT.md](DEPLOYMENT.md#ip-restrictions-security-feature) for complete guide
-- Portal: Container Apps → Ingress → IP Security Restrictions
-- CLI: `az containerapp ingress access-restriction set`
+- See [VM-DEPLOYMENT.md](VM-DEPLOYMENT.md#2-managing-ip-restrictions) for complete guide
+- Portal: Network Security Groups → [your-app]-nsg → Inbound security rules
+- CLI: `az network nsg rule create`
 
 ## Reporting Issues
 
