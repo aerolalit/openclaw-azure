@@ -15,6 +15,31 @@ Deploy your own private OpenClaw AI assistant powered by Anthropic Claude on Azu
 - 📊 **Persistent Storage** - Your conversations and data are saved
 - 🔗 **Extensible** - GitHub, Notion, and webhook integrations available
 
+> ⚠️ **Known Issue:** Control UI WebSocket may disconnect periodically due to OpenClaw bug #7384. **Your bots work perfectly** - only the web UI is affected. See [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) for details.
+
+## 📁 Repository Structure
+
+```
+openclaw-azure/
+├── deploy/                    # Deployment files
+│   ├── azuredeploy.json      # ARM template
+│   ├── deploy.sh             # Deployment script
+│   ├── parameters.json.example # Configuration template
+│   └── validate-template.sh  # Validation utility
+│
+├── docs/                      # Documentation
+│   ├── DEPLOYMENT.md         # Deployment guide
+│   ├── docs/TROUBLESHOOTING.md    # Troubleshooting guide
+│   ├── CONTRIBUTING.md       # Contribution guidelines
+│   ├── DEVELOPMENT.md        # Developer guide
+│   └── guides/               # Step-by-step guides
+│
+├── scripts/                   # Utility scripts
+│   └── cleanup-deployments.sh # Clean up test deployments
+│
+└── README.md                  # You are here!
+```
+
 ## 🎯 Quick Start
 
 ### Prerequisites
@@ -41,9 +66,28 @@ You'll need:
 
 ### Deploy to Azure
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Faerolalit%2Fopenclaw-azure%2Fmain%2Fazuredeploy.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a>
+**Option 1: One-Click Deploy (Easiest)**
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Faerolalit%2Fopenclaw-azure%2Fmain%2Fdeploy%2Fazuredeploy.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a>
+
+**Option 2: CLI Deploy (For Developers)**
+
+```bash
+# Clone the repository
+git clone https://github.com/aerolalit/openclaw-azure.git
+cd openclaw-azure
+
+# Setup your configuration
+cp deploy/parameters.json.example deploy/parameters.json
+# Edit deploy/parameters.json with your tokens
+
+# Deploy
+./deploy/deploy.sh
+```
 
 **That's it!** 🎉
+
+> 📖 **For detailed deployment instructions**, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ---
 
@@ -252,9 +296,9 @@ The deployment form is now organized into clear sections:
 
 - ✅ **FIXED** - This was a JSON syntax issue that has been resolved
 - Make sure you're using the latest template (clear browser cache)
-- See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for details
+- See [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) for details
 
-For more issues, see the complete **[🔧 Troubleshooting Guide](./TROUBLESHOOTING.md)**
+For more issues, see the complete **[🔧 Troubleshooting Guide](./docs/TROUBLESHOOTING.md)**
 
 ---
 
@@ -296,7 +340,7 @@ See [TOKEN-ORGANIZATION.md](./TOKEN-ORGANIZATION.md) for detailed documentation.
 
 ## 🤝 Support
 
-- 🔧 **Troubleshooting**: [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) - Common issues and solutions
+- 🔧 **Troubleshooting**: [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) - Common issues and solutions
 - 🐛 **Bug Reports**: [GitHub Issues](https://github.com/aerolalit/openclaw-azure/issues)
 - 💬 **Questions**: [GitHub Discussions](https://github.com/aerolalit/openclaw-azure/discussions)
 - 📖 **Documentation**: [TOKEN-ORGANIZATION.md](./TOKEN-ORGANIZATION.md) - Token guide

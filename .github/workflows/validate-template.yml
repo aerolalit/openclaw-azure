@@ -3,10 +3,10 @@ name: Validate ARM Template
 on:
   push:
     branches: [ main ]
-    paths: [ 'azuredeploy.json' ]
+    paths: [ 'deploy/azuredeploy.json' ]
   pull_request:
     branches: [ main ]
-    paths: [ 'azuredeploy.json' ]
+    paths: [ 'deploy/azuredeploy.json' ]
 
 jobs:
   validate:
@@ -37,7 +37,7 @@ jobs:
         scope: resourcegroup
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: 'validation-rg'
-        template: ./azuredeploy.json
+        template: ./deploy/azuredeploy.json
         deploymentMode: Validate
         parameters: |
           appName=testvalidation

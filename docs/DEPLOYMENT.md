@@ -6,21 +6,19 @@
 
 ```bash
 # Copy the example file
-cp parameters.json.example parameters.json
+cp deploy/parameters.json.example deploy/parameters.json
 
 # Edit with your tokens
-nano parameters.json
+nano deploy/parameters.json
 # or
-code parameters.json
+code deploy/parameters.json
 ```
 
 **Required tokens:**
-
 - At least one messaging platform token (Discord, Telegram, Slack, or WhatsApp)
 - Anthropic API key (required)
 
 **Optional tokens:**
-
 - OpenAI, Groq, Cohere (additional AI models)
 - ElevenLabs (text-to-speech)
 - GitHub, Notion (integrations)
@@ -30,26 +28,25 @@ code parameters.json
 
 ```bash
 # Simple deployment (creates new timestamped resource group)
-./deploy.sh
+./deploy/deploy.sh
 
 # Quick deployment (no confirmation)
-./deploy.sh --no-confirm
+./deploy/deploy.sh --no-confirm
 
 # Override location
-./deploy.sh --location eastus
+./deploy/deploy.sh --location eastus
 
 # Production deployment (reuse same resource group)
-./deploy.sh --reuse-group openclaw-prod-rg
+./deploy/deploy.sh --reuse-group openclaw-prod-rg
 ```
 
 ## Deployment Options
 
 ### Testing & Development
-
 **Best for:** Trying things out, testing changes
 
 ```bash
-./deploy.sh
+./deploy/deploy.sh
 ```
 
 - Creates NEW resource group with timestamp: `openclaw-mybot-20260209-143022-rg`
@@ -57,11 +54,10 @@ code parameters.json
 - Easy to delete: `az group delete --name <resource-group> --yes --no-wait`
 
 ### Production
-
 **Best for:** Long-term deployments, production use
 
 ```bash
-./deploy.sh --reuse-group openclaw-prod-rg
+./deploy/deploy.sh --reuse-group openclaw-prod-rg
 ```
 
 - Reuses same resource group
@@ -74,29 +70,25 @@ code parameters.json
 
 ```bash
 # Use different region
-./deploy.sh --location westus
+./deploy/deploy.sh --location westus
 
 # Higher resources
-./deploy.sh --cpu 2.0 --memory 4Gi
+./deploy/deploy.sh --cpu 2.0 --memory 4Gi
 
 # Production with overrides
-./deploy.sh --reuse-group openclaw-prod-rg --cpu 2.0
+./deploy/deploy.sh --reuse-group openclaw-prod-rg --cpu 2.0
 ```
 
 ### CI/CD Integration
 
 ```bash
 # Automated deployments (no prompts)
-./deploy.sh --no-confirm
-
-# Use different parameters file
-# (Edit deploy.sh line 16: PARAMETERS_FILE="parameters.prod.json")
+./deploy/deploy.sh --no-confirm
 ```
 
 ## Security Best Practices
 
 ### ✅ DO
-
 - Keep `parameters.json` in `.gitignore` (already configured)
 - Use `parameters.json.example` for the repository
 - Store real tokens only in your local `parameters.json`
@@ -104,7 +96,6 @@ code parameters.json
 - Rotate tokens regularly
 
 ### ❌ DON'T
-
 - Never commit `parameters.json` to git
 - Don't share `parameters.json` in screenshots/logs
 - Don't use production tokens for testing
@@ -112,14 +103,12 @@ code parameters.json
 ## Troubleshooting
 
 ### "parameters.json not found"
-
 ```bash
-cp parameters.json.example parameters.json
+cp deploy/parameters.json.example deploy/parameters.json
 # Edit with your tokens
 ```
 
 ### "Azure CLI not installed"
-
 ```bash
 # macOS
 brew install azure-cli
@@ -132,56 +121,29 @@ curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 ```
 
 ### "Not logged in to Azure CLI"
-
 ```bash
 az login
 ```
 
 ### Deployment Failed
-
-1. Check all required tokens are filled in `parameters.json`
+1. Check all required tokens are filled in `deploy/parameters.json`
 2. Ensure at least one messaging platform token is provided
 3. Verify Anthropic API key starts with `sk-ant-`
-4. Try a different Azure region: `./deploy.sh --location westus`
-
-## Migration from quick-deploy.sh
-
-If you were using `quick-deploy.sh`:
-
-```bash
-# Old way
-./quick-deploy.sh
-
-# New way (same behavior)
-./deploy.sh
-
-# With confirmation skip (like old quick-deploy)
-./deploy.sh --no-confirm
-```
-
-The new `deploy.sh` combines the best of both scripts:
-
-- Uses `parameters.json` (simpler, more secure)
-- Creates timestamped resource groups by default (clean deployments)
-- Adds confirmation prompts (safety)
-- Allows CLI overrides (flexibility)
-- Better help and documentation
+4. Try a different Azure region: `./deploy/deploy.sh --location westus`
 
 ## Resource Cleanup
 
 ### Delete Single Deployment
-
 ```bash
 az group delete --name openclaw-mybot-20260209-143022-rg --yes --no-wait
 ```
 
 ### Delete All OpenClaw Deployments
-
 ```bash
-# List all OpenClaw resource groups
-az group list --query "[?starts_with(name, 'openclaw-')].name" -o table
+# Use the cleanup utility
+./scripts/cleanup-deployments.sh
 
-# Delete all (careful!)
+# Or manually:
 az group list --query "[?starts_with(name, 'openclaw-')].name" -o tsv | \
   xargs -I {} az group delete --name {} --yes --no-wait
 ```
@@ -195,7 +157,7 @@ az group list --query "[?starts_with(name, 'openclaw-')].name" -o tsv | \
 
 ## Need Help?
 
-- Run `./deploy.sh --help` for all options
-- Check [README.md](README.md) for general documentation
+- Run `./deploy/deploy.sh --help` for all options
+- Check [README.md](../README.md) for general documentation
 - See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
 - Open an issue on GitHub

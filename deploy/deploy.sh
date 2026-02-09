@@ -2,9 +2,14 @@
 
 # OpenClaw Azure Deployment Script
 # Enhanced version: Uses parameters.json + creates timestamped resource groups
-# Usage: ./deploy.sh [OPTIONS]
+# Usage: ./deploy/deploy.sh [OPTIONS] (from repo root)
+#    or: ./deploy.sh [OPTIONS] (from deploy/ directory)
 
 set -e
+
+# Determine script directory and set paths accordingly
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"  # Always run from deploy/ directory
 
 # Default values (can be overridden by CLI args or parameters.json)
 LOCATION=""

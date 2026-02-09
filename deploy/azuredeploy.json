@@ -777,9 +777,9 @@
     },
     "deploymentSummary": {
       "type": "string",
-      "value": "✅ OpenClaw deployed successfully! Next steps: 1️⃣ Open the Container App URL below 2️⃣ Copy the Gateway Token and paste it in Control UI Settings 3️⃣ Go to Channels tab and enable your platforms (Discord/Telegram/Slack) 4️⃣ Your bots will be online and ready!",
+      "value": "✅ OpenClaw deployed successfully! Next steps: 1️⃣ Open the Container App URL below 2️⃣ Copy the Gateway Token and paste it in Control UI Settings 3️⃣ Go to Channels tab and enable your platforms (Discord/Telegram/Slack) 4️⃣ Your bots will be online and ready! ⚠️ KNOWN ISSUE: Control UI WebSocket connections may disconnect periodically (OpenClaw bug #7384). This is a known OpenClaw issue with reverse proxies. Your bot platforms (Discord/Telegram) will work normally.",
       "metadata": {
-        "description": "Next steps after deployment"
+        "description": "Next steps after deployment with known issues warning"
       }
     },
     "gatewayToken": {
