@@ -288,7 +288,7 @@ if [ -z "$USER_IP" ]; then
 else
     ALLOWED_IPS="$USER_IP"
     print_success "Detected your public IP: $USER_IP"
-    echo -e "${BLUE}Security:${NC}             Only this IP can access VM (HTTPS)"
+    echo -e "${BLUE}Security:${NC}            Only this IP can access VM (HTTPS + IP restriction)"
 fi
 
 echo ""
@@ -320,6 +320,27 @@ az group create \
 
 print_success "Resource group created"
 
+# Create filtered parameters file (remove Container Apps-specific params)
+print_status "Preparing VM parameters..."
+VM_PARAMS_FILE=$(mktemp /tmp/openclaw-vm-params.XXXXXX.json)
+trap "rm -f $VM_PARAMS_FILE" EXIT
+
+# Extract only parameters that exist in the VM template
+jq '{
+  "$schema": ."$schema",
+  "contentVersion": .contentVersion,
+  "parameters": (.parameters | with_entries(select(.key | IN(
+    "location", "appName",
+    "anthropicApiKey", "discordBotToken", "telegramBotToken",
+    "slackBotToken", "whatsappToken", "openaiApiKey", "groqApiKey",
+    "cohereApiKey", "braveSearchApiKey", "elevenlabsApiKey",
+    "githubToken", "notionApiKey", "gatewayToken", "webhookSecret",
+    "storageShareQuota", "backupRetentionDays"
+  ))))
+}' "$PARAMETERS_FILE" > "$VM_PARAMS_FILE"
+
+print_success "Parameters prepared (filtered Container Apps-specific settings)"
+
 # Deploy ARM template
 echo ""
 print_status "Deploying Azure VM (this takes ~10-15 minutes)..."
@@ -332,7 +353,7 @@ az deployment group create \
     --resource-group "$RESOURCE_GROUP" \
     --name "$DEPLOYMENT_NAME" \
     --template-file azuredeploy-vm.json \
-    --parameters @"$PARAMETERS_FILE" \
+    --parameters @"$VM_PARAMS_FILE" \
     --parameters allowedIpAddresses="$ALLOWED_IPS" \
     --parameters vmSize="$VM_SIZE" \
     --parameters adminUsername="$ADMIN_USERNAME" \
@@ -389,9 +410,9 @@ RECOVERY_VAULT=$(az deployment group show \
     --query "properties.outputs.recoveryVaultName.value" \
     -o tsv 2>/dev/null || echo "N/A")
 
-# Post-deployment: Update storage key in VM
+# Post-deployment: Mount Azure Files on VM and restart container
 echo ""
-print_status "Updating Azure Files storage key on VM..."
+print_status "Configuring Azure Files mount on VM..."
 
 STORAGE_KEY=$(az storage account keys list \
     --resource-group "$RESOURCE_GROUP" \
@@ -399,38 +420,44 @@ STORAGE_KEY=$(az storage account keys list \
     --query "[0].value" \
     -o tsv)
 
-# Create a script to update the storage key and mount Azure Files
-UPDATE_SCRIPT=$(cat << 'SCRIPT_EOF'
-#!/bin/bash
+# Create script to mount Azure Files and add to fstab for persistence
+MOUNT_SCRIPT="#!/bin/bash
 set -e
 
-# Update storage key in .env file
-sed -i 's/AZURE_STORAGE_ACCOUNT_KEY=PLACEHOLDER_WILL_BE_UPDATED/AZURE_STORAGE_ACCOUNT_KEY=STORAGE_KEY_PLACEHOLDER/' /etc/openclaw/.env
+# Install cifs-utils if not already installed
+apt-get install -y cifs-utils 2>/dev/null || true
 
-# Update mount script with actual storage key
-sed -i 's/STORAGE_KEY="PLACEHOLDER_WILL_BE_UPDATED"/STORAGE_KEY="STORAGE_KEY_PLACEHOLDER"/' /usr/local/bin/mount-azure-files.sh
+# Create mount point
+mkdir -p /workspace
+
+# Create credentials file (secure)
+cat > /etc/openclaw/azure-files-creds <<CREDEOF
+username=${STORAGE_ACCOUNT}
+password=${STORAGE_KEY}
+CREDEOF
+chmod 600 /etc/openclaw/azure-files-creds
 
 # Mount Azure Files
-/usr/local/bin/mount-azure-files.sh
+mount -t cifs //${STORAGE_ACCOUNT}.file.core.windows.net/openclaw-data /workspace -o vers=3.0,credentials=/etc/openclaw/azure-files-creds,dir_mode=0777,file_mode=0666,serverino
 
-# Restart OpenClaw service
-systemctl restart openclaw
+# Add to fstab for persistence across reboots
+grep -q 'openclaw-data' /etc/fstab || echo \"//${STORAGE_ACCOUNT}.file.core.windows.net/openclaw-data /workspace cifs vers=3.0,credentials=/etc/openclaw/azure-files-creds,dir_mode=0777,file_mode=0666,serverino 0 0\" >> /etc/fstab
 
-echo "✅ Storage key updated and Azure Files mounted"
-SCRIPT_EOF
-)
+# Restart Docker container to pick up mounted workspace
+docker restart openclaw 2>/dev/null || echo 'Container not ready yet, will use mount on next start'
 
-# Replace placeholder with actual storage key
-UPDATE_SCRIPT="${UPDATE_SCRIPT//STORAGE_KEY_PLACEHOLDER/$STORAGE_KEY}"
+echo '✅ Azure Files mounted at /workspace and added to fstab'
+"
 
-# Run the update script on VM via Azure CLI
-echo "$UPDATE_SCRIPT" | az vm run-command invoke \
+# Run the mount script on VM via Azure CLI
+print_status "Running mount script on VM (may take 30-60 seconds)..."
+az vm run-command invoke \
     --resource-group "$RESOURCE_GROUP" \
     --name "$VM_NAME" \
     --command-id RunShellScript \
-    --scripts @- \
+    --scripts "$MOUNT_SCRIPT" \
     --query "value[0].message" \
-    -o tsv || print_warning "Could not update storage key automatically. See post-deployment instructions."
+    -o tsv || print_warning "Could not mount Azure Files automatically. Cloud-init may still be running - try again in 5 minutes."
 
 print_success "Post-deployment configuration complete"
 
@@ -454,6 +481,7 @@ echo ""
 # Display IP restriction info
 print_header "🔐 Security Configuration"
 echo ""
+echo -e "${GREEN}✅ HTTPS enabled (automatic Let's Encrypt certificate via Caddy)${NC}"
 echo -e "${GREEN}✅ Only your IP ($USER_IP) can access the VM${NC}"
 echo -e "${GREEN}✅ SSH is disabled (use Serial Console for emergency access)${NC}"
 echo -e "${GREEN}✅ Secrets stored on VM at /etc/openclaw/.env${NC}"

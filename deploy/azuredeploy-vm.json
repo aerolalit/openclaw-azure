@@ -204,6 +204,7 @@
     "subnetName": "default",
     "publicIpName": "[concat(variables('validatedAppName'), '-ip')]",
     "dnsLabel": "[concat(variables('validatedAppName'), '-', take(uniqueString(resourceGroup().id), 8))]",
+    "vmFqdn": "[concat(variables('dnsLabel'), '.', parameters('location'), '.cloudapp.azure.com')]",
     "storageAccountName": "[toLower(concat(take(variables('validatedAppName'), 8), take(uniqueString(resourceGroup().id), 15)))]",
     "recoveryVaultName": "[concat(variables('validatedAppName'), '-vault')]",
     "backupPolicyName": "DailyBackupPolicy",
@@ -237,7 +238,22 @@
         }
       }
     ],
-    "cloudInitScript": "[concat('#cloud-config\n\npackage_update: true\npackage_upgrade: true\n\npackages:\n  - nodejs\n  - npm\n  - git\n  - curl\n  - jq\n  - cifs-utils\n\nwrite_files:\n  - path: /etc/openclaw/.env\n    permissions: ''0600''\n    owner: root:root\n    content: |\n      # OpenClaw Environment Variables\n      DISCORD_BOT_TOKEN=', parameters('discordBotToken'), '\n      TELEGRAM_BOT_TOKEN=', parameters('telegramBotToken'), '\n      SLACK_BOT_TOKEN=', parameters('slackBotToken'), '\n      WHATSAPP_TOKEN=', parameters('whatsappToken'), '\n      ANTHROPIC_API_KEY=', parameters('anthropicApiKey'), '\n      OPENAI_API_KEY=', parameters('openaiApiKey'), '\n      GROQ_API_KEY=', parameters('groqApiKey'), '\n      COHERE_API_KEY=', parameters('cohereApiKey'), '\n      ELEVENLABS_API_KEY=', parameters('elevenlabsApiKey'), '\n      BRAVE_SEARCH_API_KEY=', parameters('braveSearchApiKey'), '\n      GITHUB_TOKEN=', parameters('githubToken'), '\n      NOTION_API_KEY=', parameters('notionApiKey'), '\n      OPENCLAW_GATEWAY_TOKEN=', variables('gatewayToken'), '\n      WEBHOOK_SECRET=', parameters('webhookSecret'), '\n      AZURE_STORAGE_ACCOUNT_NAME=', variables('storageAccountName'), '\n      AZURE_STORAGE_ACCOUNT_KEY=PLACEHOLDER_WILL_BE_UPDATED\n      WORKSPACE_PATH=/workspace\n      NODE_ENV=production\n      OPENCLAW_AUTO_START=gateway\n      OPENCLAW_GATEWAY_PORT=18789\n      OPENCLAW_GATEWAY_AUTH_MODE=none\n      OPENCLAW_GATEWAY_BIND=lan\n      OPENCLAW_CHANNELS_TELEGRAM_DM_POLICY=trust\n      HOST=0.0.0.0\n\n  - path: /etc/openclaw/openclaw.json\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      {\n        \"gateway\": {\n          \"trustedProxies\": [\"100.100.0.0/16\", \"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\"],\n          \"controlUi\": {\n            \"allowInsecureAuth\": true,\n            \"dangerouslyDisableDeviceAuth\": true\n          }\n        }\n      }\n\n  - path: /etc/systemd/system/openclaw.service\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      [Unit]\n      Description=OpenClaw AI Assistant\n      After=network.target\n\n      [Service]\n      Type=simple\n      User=openclaw\n      WorkingDirectory=/opt/openclaw\n      EnvironmentFile=/etc/openclaw/.env\n      ExecStart=/usr/bin/node dist/index.js gateway --port 18789 --bind lan --allow-unconfigured\n      Restart=always\n      RestartSec=10\n      StandardOutput=journal\n      StandardError=journal\n\n      [Install]\n      WantedBy=multi-user.target\n\n  - path: /usr/local/bin/mount-azure-files.sh\n    permissions: ''0755''\n    owner: root:root\n    content: |\n      #!/bin/bash\n      set -e\n      \n      STORAGE_ACCOUNT=\"', variables('storageAccountName'), '\"\n      SHARE_NAME=\"openclaw-data\"\n      MOUNT_POINT=\"/workspace\"\n      \n      # Get storage key from Azure\n      STORAGE_KEY=\"PLACEHOLDER_WILL_BE_UPDATED\"\n      \n      # Create mount point\n      mkdir -p \"$MOUNT_POINT\"\n      \n      # Mount Azure Files\n      mount -t cifs \\\n        \"//$STORAGE_ACCOUNT.file.core.windows.net/$SHARE_NAME\" \\\n        \"$MOUNT_POINT\" \\\n        -o vers=3.0,username=\"$STORAGE_ACCOUNT\",password=\"$STORAGE_KEY\",dir_mode=0777,file_mode=0666,serverino\n      \n      echo \"Azure Files mounted successfully at $MOUNT_POINT\"\n\nruncmd:\n  # Install Node.js 20 LTS\n  - curl -fsSL https://deb.nodesource.com/setup_20.x | bash -\n  - apt-get install -y nodejs\n  \n  # Create openclaw user\n  - useradd -r -s /bin/bash -d /opt/openclaw openclaw\n  \n  # Create directories\n  - mkdir -p /opt/openclaw\n  - mkdir -p /etc/openclaw\n  - mkdir -p /workspace\n  \n  # Install OpenClaw\n  - cd /opt/openclaw\n  - npm install -g openclaw@latest || echo \"OpenClaw installation failed, will retry\"\n  - npm install openclaw@latest || echo \"Local installation failed\"\n  \n  # Set permissions\n  - chown -R openclaw:openclaw /opt/openclaw\n  - chown -R openclaw:openclaw /workspace\n  - chmod 600 /etc/openclaw/.env\n  \n  # Copy config to openclaw home\n  - cp /etc/openclaw/openclaw.json /opt/openclaw/.openclaw/openclaw.json || true\n  \n  # Mount Azure Files (storage key will be updated by deployment script)\n  - /usr/local/bin/mount-azure-files.sh || echo \"Azure Files mount will be configured post-deployment\"\n  \n  # Enable and start service\n  - systemctl daemon-reload\n  - systemctl enable openclaw\n  - systemctl start openclaw\n  \n  # Setup HTTPS with self-signed certificate (Caddy auto-HTTPS alternative)\n  - apt-get install -y nginx certbot\n  - systemctl enable nginx\n  \n  # Configure firewall\n  - ufw allow 443/tcp\n  - ufw allow 80/tcp\n  - ufw --force enable\n\nfinal_message: \"OpenClaw VM setup complete! Check systemd status: systemctl status openclaw\"\n')]"
+    "staticNsgRules": [
+      {
+        "name": "AllowHTTPForLetsEncrypt",
+        "properties": {
+          "priority": 900,
+          "protocol": "Tcp",
+          "access": "Allow",
+          "direction": "Inbound",
+          "sourceAddressPrefix": "*",
+          "sourcePortRange": "*",
+          "destinationAddressPrefix": "*",
+          "destinationPortRange": "80"
+        }
+      }
+    ],
+    "cloudInitScript": "[concat('#cloud-config\n\npackage_update: true\npackage_upgrade: true\n\npackages:\n  - curl\n  - jq\n  - cifs-utils\n  - ca-certificates\n  - gnupg\n  - lsb-release\n  - apt-transport-https\n\nwrite_files:\n  - path: /etc/openclaw/.env\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      DISCORD_BOT_TOKEN=', parameters('discordBotToken'), '\n      TELEGRAM_BOT_TOKEN=', parameters('telegramBotToken'), '\n      SLACK_BOT_TOKEN=', parameters('slackBotToken'), '\n      WHATSAPP_TOKEN=', parameters('whatsappToken'), '\n      ANTHROPIC_API_KEY=', parameters('anthropicApiKey'), '\n      OPENAI_API_KEY=', parameters('openaiApiKey'), '\n      GROQ_API_KEY=', parameters('groqApiKey'), '\n      COHERE_API_KEY=', parameters('cohereApiKey'), '\n      ELEVENLABS_API_KEY=', parameters('elevenlabsApiKey'), '\n      BRAVE_SEARCH_API_KEY=', parameters('braveSearchApiKey'), '\n      GITHUB_TOKEN=', parameters('githubToken'), '\n      NOTION_API_KEY=', parameters('notionApiKey'), '\n      OPENCLAW_GATEWAY_TOKEN=', variables('gatewayToken'), '\n      WEBHOOK_SECRET=', parameters('webhookSecret'), '\n      WORKSPACE_PATH=/workspace\n      NODE_ENV=production\n      OPENCLAW_AUTO_START=gateway\n      OPENCLAW_GATEWAY_PORT=18789\n      OPENCLAW_GATEWAY_AUTH_MODE=none\n      OPENCLAW_GATEWAY_BIND=lan\n      OPENCLAW_CHANNELS_TELEGRAM_DM_POLICY=trust\n      HOST=0.0.0.0\n\n  - path: /etc/systemd/system/openclaw.service\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      [Unit]\n      Description=OpenClaw AI Assistant (Docker)\n      After=docker.service\n      Requires=docker.service\n\n      [Service]\n      Type=oneshot\n      RemainAfterExit=yes\n      ExecStart=/usr/bin/docker start openclaw\n      ExecStop=/usr/bin/docker stop openclaw\n\n      [Install]\n      WantedBy=multi-user.target\n\n  - path: /etc/caddy/Caddyfile\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      ', variables('vmFqdn'), ' {\n          reverse_proxy localhost:18789\n      }\n\nruncmd:\n  # Install Docker\n  - curl -fsSL https://get.docker.com | sh\n  - systemctl enable docker\n  - systemctl start docker\n  \n  # Create workspace directory\n  - mkdir -p /workspace\n  \n  # Pull OpenClaw Docker image\n  - docker pull ghcr.io/openclaw/openclaw:main\n  \n  # Create and start OpenClaw container\n  # --env-file reads secrets at creation time (no permission issues)\n  # --network host binds OpenClaw directly to VM port 18789\n  # -v /workspace mounts persistent storage\n  # Config is written inline (same approach as Container Apps)\n  - docker run -d --name openclaw --restart unless-stopped --network host --env-file /etc/openclaw/.env -v /workspace:/workspace ghcr.io/openclaw/openclaw:main /bin/sh -c \"mkdir -p ~/.openclaw && printf ''{\\\"gateway\\\":{\\\"trustedProxies\\\":[\\\"127.0.0.0/8\\\",\\\"100.100.0.0/16\\\",\\\"10.0.0.0/8\\\",\\\"172.16.0.0/12\\\",\\\"192.168.0.0/16\\\"],\\\"controlUi\\\":{\\\"allowInsecureAuth\\\":true,\\\"dangerouslyDisableDeviceAuth\\\":true}}}'' > ~/.openclaw/openclaw.json && node dist/index.js gateway --port 18789 --bind lan --allow-unconfigured\"\n  \n  # Install Caddy for HTTPS reverse proxy\n  - curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/gpg.key | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg\n  - curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt | tee /etc/apt/sources.list.d/caddy-stable.list\n  - apt-get update\n  - apt-get install -y caddy\n  - systemctl enable caddy\n  - systemctl restart caddy\n  \n  # Enable systemd service for start/stop management\n  - systemctl daemon-reload\n  - systemctl enable openclaw\n\nfinal_message: \"OpenClaw VM setup complete! Docker + Caddy HTTPS proxy running. Check: docker logs openclaw\"\n')]"
   },
   "resources": [
     {
@@ -283,7 +299,9 @@
         "name": "RS0",
         "tier": "Standard"
       },
-      "properties": {}
+      "properties": {
+        "publicNetworkAccess": "Enabled"
+      }
     },
     {
       "type": "Microsoft.RecoveryServices/vaults/backupPolicies",
@@ -318,7 +336,7 @@
       "name": "[variables('nsgName')]",
       "location": "[parameters('location')]",
       "properties": {
-        "securityRules": "[variables('nsgSecurityRules')]"
+        "securityRules": "[concat(variables('staticNsgRules'), variables('nsgSecurityRules'))]"
       }
     },
     {
@@ -406,10 +424,7 @@
           "adminPassword": "[parameters('adminPassword')]",
           "customData": "[base64(variables('cloudInitScript'))]",
           "linuxConfiguration": {
-            "disablePasswordAuthentication": false,
-            "ssh": {
-              "publicKeys": []
-            }
+            "disablePasswordAuthentication": false
           }
         },
         "storageProfile": {
@@ -494,7 +509,7 @@
       "type": "string",
       "value": "[concat('https://', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))).dnsSettings.fqdn)]",
       "metadata": {
-        "description": "OpenClaw Control UI URL (HTTPS, after NGINX/Caddy setup)"
+        "description": "OpenClaw Control UI URL"
       }
     },
     "gatewayToken": {
