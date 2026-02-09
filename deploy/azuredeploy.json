@@ -10,11 +10,11 @@
     }
   },
   "parameters": {
-    "_botConfiguration": {
-      "type": "object",
-      "defaultValue": {},
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
       "metadata": {
-        "description": "🤖 BOT CONFIGURATION SECTION"
+        "description": "Azure region for deployment (e.g., germanywestcentral, westeurope, eastus)"
       }
     },
     "appName": {
@@ -25,144 +25,88 @@
         "description": "Short name for your OpenClaw instance (3-12 chars, letters and numbers only). Example: 'mybot' or 'assistant1'"
       }
     },
-    "_messagingTokens": {
-      "type": "object",
-      "defaultValue": {},
+    "anthropicApiKey": {
+      "type": "securestring",
+      "minLength": 20,
       "metadata": {
-        "description": "🤝 MESSAGING PLATFORM TOKENS - At least one required"
+        "description": "⭐ REQUIRED: Anthropic Claude API key from console.anthropic.com. Must start with 'sk-ant-' (e.g., sk-ant-api03-...). OpenClaw requires Claude AI to function."
       }
     },
     "discordBotToken": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "Discord bot token from Discord Developer Portal. REQUIRED if not using Telegram. Should start with 'MT' or 'MQ' and be ~59 characters long. Leave empty ONLY if using Telegram."
+        "description": "💬 Discord bot token from Discord Developer Portal (optional, but at least one messaging platform required). Starts with 'MT' or 'MQ', ~59 chars. Leave empty if using Telegram/Slack instead."
       }
     },
     "telegramBotToken": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "Telegram bot token from @BotFather. REQUIRED if not using Discord. Format: numbers:letters (like 123456789:ABCdef...). Leave empty ONLY if using Discord."
+        "description": "💬 Telegram bot token from @BotFather (optional, but at least one messaging platform required). Format: numbers:letters (123456789:ABCdef...). Leave empty if using Discord/Slack instead."
       }
     },
     "slackBotToken": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "OPTIONAL: Slack bot token (xoxb-...) from your Slack app. Leave empty if not using Slack integration."
+        "description": "💬 Slack bot token from your Slack app (optional). Starts with 'xoxb-'. Leave empty if not using Slack."
       }
     },
     "whatsappToken": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "OPTIONAL: WhatsApp Business API token. Leave empty if not using WhatsApp integration."
-      }
-    },
-    "_aiApiKeys": {
-      "type": "object",
-      "defaultValue": {},
-      "metadata": {
-        "description": "🧠 AI/LLM API KEYS - Anthropic required, others optional"
-      }
-    },
-    "anthropicApiKey": {
-      "type": "securestring",
-      "minLength": 20,
-      "metadata": {
-        "description": "🔑 REQUIRED: Anthropic Claude API key from console.anthropic.com. Must start with 'sk-ant-' (e.g., sk-ant-api03-...). This is your primary AI model."
+        "description": "💬 WhatsApp Business API token (optional). Leave empty if not using WhatsApp."
       }
     },
     "openaiApiKey": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "OPTIONAL: OpenAI API key (sk-...) for additional AI capabilities, image generation, or fallback. Leave empty if not needed."
+        "description": "OPTIONAL: OpenAI API key (sk-...) for GPT models, DALL-E image generation, or fallback AI. Leave empty if not needed."
       }
     },
     "groqApiKey": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "OPTIONAL: Groq API key (gsk_...) for fast inference. Leave empty if not needed."
+        "description": "OPTIONAL: Groq API key (gsk_...) for ultra-fast inference with Llama/Mixtral models. Leave empty if not needed."
       }
     },
     "cohereApiKey": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "OPTIONAL: Cohere API key for additional AI models. Leave empty if not needed."
-      }
-    },
-    "_externalServices": {
-      "type": "object",
-      "defaultValue": {},
-      "metadata": {
-        "description": "🌐 EXTERNAL SERVICE TOKENS - All optional"
-      }
-    },
-    "elevenlabsApiKey": {
-      "type": "securestring",
-      "defaultValue": "",
-      "metadata": {
-        "description": "OPTIONAL: ElevenLabs API key for text-to-speech/voice cloning. Leave empty if not using voice features."
+        "description": "OPTIONAL: Cohere API key for Command models and embeddings. Leave empty if not needed."
       }
     },
     "braveSearchApiKey": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "OPTIONAL: Brave Search API key for web search capabilities. Leave empty to use default search."
+        "description": "OPTIONAL: Brave Search API key for enhanced web search capabilities. Leave empty to use default search."
+      }
+    },
+    "elevenlabsApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "OPTIONAL: ElevenLabs API key for text-to-speech and voice cloning features. Leave empty if not using voice."
       }
     },
     "githubToken": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "OPTIONAL: GitHub Personal Access Token (ghp_...) for repository interactions. Leave empty if not needed."
+        "description": "OPTIONAL: GitHub Personal Access Token (ghp_...) for repository operations and code search. Leave empty if not needed."
       }
     },
     "notionApiKey": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "OPTIONAL: Notion API key (secret_...) for Notion integrations. Leave empty if not using Notion."
-      }
-    },
-    "_federationTokens": {
-      "type": "object",
-      "defaultValue": {},
-      "metadata": {
-        "description": "🔗 GATEWAY & FEDERATION TOKENS - Advanced features"
-      }
-    },
-    "gatewayToken": {
-      "type": "securestring",
-      "defaultValue": "",
-      "metadata": {
-        "description": "OPTIONAL: Clawdbot Gateway federation token for connecting multiple instances. Leave empty for standalone deployment."
-      }
-    },
-    "webhookSecret": {
-      "type": "securestring",
-      "defaultValue": "",
-      "metadata": {
-        "description": "OPTIONAL: Webhook authentication secret for incoming integrations. Leave empty if not using webhooks."
-      }
-    },
-    "_infrastructureSettings": {
-      "type": "object",
-      "defaultValue": {},
-      "metadata": {
-        "description": "⚙️ INFRASTRUCTURE SETTINGS"
-      }
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().location]",
-      "metadata": {
-        "description": "Azure region for deployment"
+        "description": "OPTIONAL: Notion API key (secret_...) for Notion workspace integrations. Leave empty if not using Notion."
       }
     },
     "containerCpu": {
@@ -170,7 +114,7 @@
       "defaultValue": "1.0",
       "allowedValues": ["0.5", "1.0", "2.0"],
       "metadata": {
-        "description": "CPU allocation for the container"
+        "description": "Advanced: CPU cores allocated to the container (1.0 recommended for most use cases)"
       }
     },
     "containerMemory": {
@@ -178,7 +122,7 @@
       "defaultValue": "2Gi",
       "allowedValues": ["1Gi", "2Gi", "4Gi"],
       "metadata": {
-        "description": "Memory allocation for the container (2Gi recommended for most use cases)"
+        "description": "Advanced: Memory allocated to the container (2Gi recommended for most use cases)"
       }
     },
     "logRetentionDays": {
@@ -186,7 +130,21 @@
       "defaultValue": 30,
       "allowedValues": [7, 14, 30, 60, 90],
       "metadata": {
-        "description": "How long to keep logs in days. Lower values reduce costs. (30 days recommended)"
+        "description": "Advanced: Log retention period in days. Lower values reduce storage costs (30 days recommended)"
+      }
+    },
+    "gatewayToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Advanced: Gateway federation token for connecting multiple OpenClaw instances. Leave empty for standalone deployment."
+      }
+    },
+    "webhookSecret": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Advanced: Webhook authentication secret for incoming HTTP integrations. Leave empty if not using custom webhooks."
       }
     }
   },
