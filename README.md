@@ -68,7 +68,7 @@ You'll need:
 
 **Option 1: One-Click Deploy (Easiest)**
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Faerolalit%2Fopenclaw-azure%2Fmain%2Fdeploy%2Fazuredeploy.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a>
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Faerolalit%2Fopenclaw-azure%2Fmain%2Fdeploy%2Fazuredeploy.json%3Fv%3D2" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a>
 
 **Option 2: CLI Deploy (For Developers)**
 
