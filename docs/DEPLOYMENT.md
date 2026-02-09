@@ -135,19 +135,19 @@ When deploying via the "Deploy to Azure" button:
 
 1. **Parameter field shows:**
    ```
-   🔐 REQUIRED: At least one IP address must be provided for security.
+   🔐 REQUIRED: Your IP address(es) for secure access.
+   Visit https://api.ipify.org to find your IP.
 
-   To find your IP:
-   (1) Open https://api.ipify.org in new tab
-   (2) Copy IP shown
-   (3) Enter as ["YOUR_IP/32"]
+   Single IP: 79.237.146.142
+   Multiple IPs: 79.237.146.142,79.237.146.143 (comma-separated, no spaces)
 
-   Example: ["203.0.113.45/32"]
+   Template automatically adds /32 notation.
    ```
 
 2. **User action:**
-   - Open https://api.ipify.org → see `203.0.113.45`
-   - Enter in form: `["203.0.113.45/32"]`
+   - Open https://api.ipify.org → see `79.237.146.142`
+   - Enter in form: `79.237.146.142` (just the IP, no brackets or quotes!)
+   - For multiple IPs: `79.237.146.142,79.237.146.143`
    - Deploy
 
 ### Managing IP Restrictions Post-Deployment

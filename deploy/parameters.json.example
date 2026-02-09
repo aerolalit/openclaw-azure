@@ -58,6 +58,9 @@
     },
     "logRetentionDays": {
       "value": 30
+    },
+    "allowedIpAddresses": {
+      "value": ""
     }
   }
 }

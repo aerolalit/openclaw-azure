@@ -148,10 +148,10 @@
       }
     },
     "allowedIpAddresses": {
-      "type": "array",
-      "minLength": 1,
+      "type": "string",
+      "minLength": 7,
       "metadata": {
-        "description": "🔐 REQUIRED: At least one IP address must be provided for security. CLI deployment: auto-detected. Azure Portal: (1) Open https://api.ipify.org in new tab, (2) Copy IP, (3) Enter as [\"YOUR_IP/32\"]. Example: [\"203.0.113.45/32\"]. Add more IPs post-deployment via Azure Portal → Container Apps → Ingress → IP Security Restrictions."
+        "description": "🔐 REQUIRED: Your IP address(es) for secure access. Visit https://api.ipify.org to find your IP. Single IP: 79.237.146.142 | Multiple IPs: 79.237.146.142,79.237.146.143 (comma-separated, no spaces). Template automatically adds /32 notation. Add more IPs post-deployment via Azure Portal → Container Apps → Ingress."
       }
     }
   },
@@ -177,7 +177,20 @@
     "githubTokenValid": "[if(variables('hasGitHubToken'), startsWith(parameters('githubToken'), 'ghp_'), true())]",
     "hasNotionKey": "[not(equals(parameters('notionApiKey'), ''))]",
     "notionKeyValid": "[if(variables('hasNotionKey'), startsWith(parameters('notionApiKey'), 'secret_'), true())]",
-    "validatedAppName": "[if(and(variables('hasAtLeastOneMessagingToken'), and(variables('anthropicKeyValid'), and(variables('openaiKeyValid'), and(variables('groqKeyValid'), and(variables('githubTokenValid'), variables('notionKeyValid')))))), parameters('appName'), 'ERROR-Invalid-tokens')]"
+    "validatedAppName": "[if(and(variables('hasAtLeastOneMessagingToken'), and(variables('anthropicKeyValid'), and(variables('openaiKeyValid'), and(variables('groqKeyValid'), and(variables('githubTokenValid'), variables('notionKeyValid')))))), parameters('appName'), 'ERROR-Invalid-tokens')]",
+    "userIpInput": "[trim(parameters('allowedIpAddresses'))]",
+    "ipArray": "[split(variables('userIpInput'), ',')]",
+    "copy": [
+      {
+        "name": "ipSecurityRestrictions",
+        "count": "[length(variables('ipArray'))]",
+        "input": {
+          "name": "[concat('AllowIP-', replace(replace(trim(variables('ipArray')[copyIndex()]), '.', '-'), '/', '-'))]",
+          "ipAddressRange": "[if(contains(trim(variables('ipArray')[copyIndex()]), '/'), trim(variables('ipArray')[copyIndex()]), concat(trim(variables('ipArray')[copyIndex()]), '/32'))]",
+          "action": "Allow"
+        }
+      }
+    ]
   },
   "resources": [
     {
@@ -524,7 +537,7 @@
             "targetPort": 18789,
             "transport": "auto",
             "allowInsecure": false,
-            "ipSecurityRestrictions": "[if(greater(length(parameters('allowedIpAddresses')), 0), map(parameters('allowedIpAddresses'), lambda('ip', createObject('name', concat('AllowIP-', replace(lambdaVariables('ip'), '/', '-')), 'ipAddressRange', lambdaVariables('ip'), 'action', 'Allow'))), createArray())]",
+            "ipSecurityRestrictions": "[variables('ipSecurityRestrictions')]",
             "traffic": [
               {
                 "weight": 100,

@@ -236,7 +236,7 @@ if [ -z "$USER_IP" ]; then
         read -p "Enter your public IP address (required): " MANUAL_IP
         if [ -n "$MANUAL_IP" ]; then
             USER_IP="$MANUAL_IP"
-            ALLOWED_IPS="[\"$USER_IP/32\"]"
+            ALLOWED_IPS="$USER_IP"
             print_success "Using IP: $USER_IP"
         else
             print_error "IP address cannot be empty. Deployment requires at least one IP for security."
@@ -244,7 +244,7 @@ if [ -z "$USER_IP" ]; then
         fi
     done
 else
-    ALLOWED_IPS="[\"$USER_IP/32\"]"
+    ALLOWED_IPS="$USER_IP"
     print_success "Detected your public IP: $USER_IP"
     echo -e "${BLUE}Security:${NC}          Only this IP can access Control UI"
 fi
