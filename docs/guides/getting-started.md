@@ -61,7 +61,7 @@ You'll see a form with several fields:
 
 The deployment takes about 10-15 minutes. The VM needs to:
 - Provision the virtual machine
-- Install Docker and OpenClaw
+- Install Node.js and OpenClaw
 - Set up HTTPS with Caddy
 - Configure backups
 

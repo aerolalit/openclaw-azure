@@ -30,7 +30,7 @@ Paste error messages here
 <!-- List any troubleshooting steps you've already attempted -->
 - [ ] Checked the troubleshooting guide
 - [ ] Verified Discord token and Anthropic API key
-- [ ] Checked VM logs (docker logs openclaw)
+- [ ] Checked VM logs (journalctl -u openclaw)
 - [ ] Verified bot permissions in Discord
 - [ ] Other: 
 

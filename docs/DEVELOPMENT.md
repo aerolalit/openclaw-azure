@@ -60,12 +60,12 @@ npm run format
 - **Unescaped quotes** in strings
 - **Missing quotes** around property names
 
-### OpenClaw Docker Issues
+### OpenClaw Issues
 
 - **Port:** OpenClaw listens on `18789`, Caddy proxies HTTPS:443 → localhost:18789
 - **Env vars:** Use `DISCORD_BOT_TOKEN` (not `DISCORD_TOKEN`)
-- **Config:** Written inline via `printf` in docker run command
-- **Secrets:** Loaded via `--env-file /etc/openclaw/.env`
+- **Config:** Written to `/root/.openclaw/openclaw.json` via cloud-init
+- **Secrets:** Loaded via systemd `EnvironmentFile=/etc/openclaw/.env`
 
 ## Template Updates
 
@@ -84,7 +84,7 @@ When updating `azuredeploy.json`:
 
 3. **Check VM logs after deployment:**
    - Wait for cloud-init to complete (5-10 minutes)
-   - Check `docker logs openclaw` for startup errors
+   - Check `journalctl -u openclaw -n 50` for startup errors
    - Verify Caddy is serving HTTPS
 
 ## Troubleshooting Azure Deployment
@@ -98,9 +98,9 @@ When updating `azuredeploy.json`:
 **OpenClaw not starting:**
 
 - Check cloud-init status: `cloud-init status`
-- Check Docker container: `docker logs openclaw`
+- Check OpenClaw service: `systemctl status openclaw`
+- Check OpenClaw logs: `journalctl -u openclaw -n 50`
 - Verify port 18789 is listening: `ss -tlnp | grep 18789`
-- Ensure Docker image `ghcr.io/openclaw/openclaw:main` is accessible
 
 **Caddy not serving HTTPS:**
 

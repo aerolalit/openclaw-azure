@@ -249,7 +249,7 @@ az vm run-command invoke \
   --resource-group <your-resource-group> \
   --name <your-vm-name> \
   --command-id RunShellScript \
-  --scripts 'docker logs openclaw --tail 50'
+  --scripts 'journalctl -u openclaw -n 50 --no-pager'
 ```
 
 ### Troubleshooting

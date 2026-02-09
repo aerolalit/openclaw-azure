@@ -443,8 +443,8 @@ mount -t cifs //${STORAGE_ACCOUNT}.file.core.windows.net/openclaw-data /workspac
 # Add to fstab for persistence across reboots
 grep -q 'openclaw-data' /etc/fstab || echo \"//${STORAGE_ACCOUNT}.file.core.windows.net/openclaw-data /workspace cifs vers=3.0,credentials=/etc/openclaw/azure-files-creds,dir_mode=0777,file_mode=0666,serverino 0 0\" >> /etc/fstab
 
-# Restart Docker container to pick up mounted workspace
-docker restart openclaw 2>/dev/null || echo 'Container not ready yet, will use mount on next start'
+# Restart OpenClaw to pick up mounted workspace
+systemctl restart openclaw 2>/dev/null || echo 'Service not ready yet, will use mount on next start'
 
 echo '✅ Azure Files mounted at /workspace and added to fstab'
 "
