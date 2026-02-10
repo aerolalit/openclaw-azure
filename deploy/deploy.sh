@@ -19,7 +19,6 @@ VM_SIZE="Standard_B2s"
 ADMIN_USERNAME="azureuser"
 ADMIN_PASSWORD=""
 ENABLE_AUTO_SHUTDOWN="false"
-STORAGE_SHARE_QUOTA=""
 BACKUP_RETENTION_DAYS=""
 PARAMETERS_FILE="parameters.json"
 CREATE_NEW_GROUP=true
@@ -221,10 +220,6 @@ if [ -z "$LOCATION" ]; then
     LOCATION=$(jq -r '.parameters.location.value' "$PARAMETERS_FILE")
 fi
 
-if [ -z "$STORAGE_SHARE_QUOTA" ]; then
-    STORAGE_SHARE_QUOTA=$(jq -r '.parameters.storageShareQuota.value // 100' "$PARAMETERS_FILE")
-fi
-
 if [ -z "$BACKUP_RETENTION_DAYS" ]; then
     BACKUP_RETENTION_DAYS=$(jq -r '.parameters.backupRetentionDays.value // 7' "$PARAMETERS_FILE")
 fi
@@ -257,7 +252,6 @@ echo -e "${BLUE}App Name:${NC}            $APP_NAME"
 echo -e "${BLUE}VM Size:${NC}             $VM_SIZE"
 echo -e "${BLUE}Admin Username:${NC}      $ADMIN_USERNAME"
 echo -e "${BLUE}Auto-Shutdown:${NC}       $ENABLE_AUTO_SHUTDOWN"
-echo -e "${BLUE}Storage Quota:${NC}       ${STORAGE_SHARE_QUOTA} GB"
 echo -e "${BLUE}Backup Retention:${NC}    $BACKUP_RETENTION_DAYS days"
 echo ""
 
@@ -335,7 +329,7 @@ jq '{
     "slackBotToken", "whatsappToken", "openaiApiKey", "groqApiKey",
     "cohereApiKey", "braveSearchApiKey", "elevenlabsApiKey",
     "githubToken", "notionApiKey", "gatewayToken", "webhookSecret",
-    "storageShareQuota", "backupRetentionDays"
+    "backupRetentionDays"
   ))))
 }' "$PARAMETERS_FILE" > "$VM_PARAMS_FILE"
 
@@ -398,68 +392,11 @@ GATEWAY_TOKEN=$(az deployment group show \
     --query "properties.outputs.gatewayToken.value" \
     -o tsv 2>/dev/null || echo "N/A")
 
-STORAGE_ACCOUNT=$(az deployment group show \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$DEPLOYMENT_NAME" \
-    --query "properties.outputs.storageAccountName.value" \
-    -o tsv 2>/dev/null || echo "N/A")
-
 RECOVERY_VAULT=$(az deployment group show \
     --resource-group "$RESOURCE_GROUP" \
     --name "$DEPLOYMENT_NAME" \
     --query "properties.outputs.recoveryVaultName.value" \
     -o tsv 2>/dev/null || echo "N/A")
-
-# Post-deployment: Mount Azure Files on VM and restart container
-echo ""
-print_status "Configuring Azure Files mount on VM..."
-
-STORAGE_KEY=$(az storage account keys list \
-    --resource-group "$RESOURCE_GROUP" \
-    --account-name "$STORAGE_ACCOUNT" \
-    --query "[0].value" \
-    -o tsv)
-
-# Create script to mount Azure Files and add to fstab for persistence
-MOUNT_SCRIPT="#!/bin/bash
-set -e
-
-# Install cifs-utils if not already installed
-apt-get install -y cifs-utils 2>/dev/null || true
-
-# Create mount point
-mkdir -p /workspace
-
-# Create credentials file (secure)
-cat > /etc/openclaw/azure-files-creds <<CREDEOF
-username=${STORAGE_ACCOUNT}
-password=${STORAGE_KEY}
-CREDEOF
-chmod 600 /etc/openclaw/azure-files-creds
-
-# Mount Azure Files
-mount -t cifs //${STORAGE_ACCOUNT}.file.core.windows.net/openclaw-data /workspace -o vers=3.0,credentials=/etc/openclaw/azure-files-creds,dir_mode=0777,file_mode=0666,serverino
-
-# Add to fstab for persistence across reboots
-grep -q 'openclaw-data' /etc/fstab || echo \"//${STORAGE_ACCOUNT}.file.core.windows.net/openclaw-data /workspace cifs vers=3.0,credentials=/etc/openclaw/azure-files-creds,dir_mode=0777,file_mode=0666,serverino 0 0\" >> /etc/fstab
-
-# Restart OpenClaw to pick up mounted workspace
-systemctl restart openclaw 2>/dev/null || echo 'Service not ready yet, will use mount on next start'
-
-echo '✅ Azure Files mounted at /workspace and added to fstab'
-"
-
-# Run the mount script on VM via Azure CLI
-print_status "Running mount script on VM (may take 30-60 seconds)..."
-az vm run-command invoke \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$VM_NAME" \
-    --command-id RunShellScript \
-    --scripts "$MOUNT_SCRIPT" \
-    --query "value[0].message" \
-    -o tsv || print_warning "Could not mount Azure Files automatically. Cloud-init may still be running - try again in 5 minutes."
-
-print_success "Post-deployment configuration complete"
 
 # Display success info
 echo ""
@@ -470,9 +407,6 @@ echo -e "${BLUE}VM Name:${NC}              $VM_NAME"
 echo -e "${BLUE}Public IP:${NC}            $VM_PUBLIC_IP"
 echo -e "${BLUE}DNS Name:${NC}             $VM_DNS_NAME"
 echo -e "${BLUE}Control UI URL:${NC}       $CONTROL_UI_URL"
-if [ "$STORAGE_ACCOUNT" != "N/A" ]; then
-    echo -e "${BLUE}Storage Account:${NC}      $STORAGE_ACCOUNT"
-fi
 if [ "$RECOVERY_VAULT" != "N/A" ]; then
     echo -e "${BLUE}Recovery Vault:${NC}       $RECOVERY_VAULT"
 fi

@@ -103,7 +103,7 @@ Once deployment completes:
 
 ## Cost Management
 
-Your OpenClaw will cost approximately $48-64/month. To monitor costs:
+Your OpenClaw will cost approximately $43-54/month. To monitor costs:
 
 1. Go to [Azure Cost Management](https://portal.azure.com/#view/Microsoft_Azure_CostManagement/Menu/~/costanalysis)
 2. Select your subscription

@@ -162,15 +162,13 @@ Estimated monthly costs (US East region):
 | Component          | Cost        | Description                      |
 | ------------------ | ----------- | -------------------------------- |
 | VM (Standard_B2s)  | $35-40      | 2 vCPU, 4 GB RAM, 30 GB SSD      |
-| Storage Account    | $5-10       | Azure Files (100 GB)             |
 | VM Backup          | $5-10       | Daily backups (incremental)      |
 | Public IP          | $3-4        | Static IP with DNS               |
-| **Total**          | **~$48-64** | Varies by VM size and storage    |
+| **Total**          | **~$43-54** | Varies by VM size                |
 
 **Cost Tips:**
 - Use Standard_B1s for testing (~$10/month)
 - Enable auto-shutdown for dev environments (saves ~50%)
-- Reduce storage quota (10 GB instead of 100 GB)
 - Use 7-day backup retention instead of 30 days
 
 ---

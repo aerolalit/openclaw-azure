@@ -95,7 +95,7 @@ Choose based on your workload:
 ```
 
 - Reuses same resource group
-- Preserves storage and configuration
+- Preserves configuration
 - Updates in-place
 - Daily backups enabled
 
@@ -356,7 +356,7 @@ az vm start \
 - ✅ OS disk (Ubuntu with all configurations)
 - ✅ Installed packages (OpenClaw + dependencies)
 - ✅ System files (/etc/openclaw/.env with secrets)
-- ✅ User data (via Azure Files mount at /workspace)
+- ✅ OpenClaw workspace data (/root/.openclaw/workspace)
 
 **Backup schedule:**
 - Daily at 2:00 AM UTC
@@ -414,24 +414,6 @@ az backup restore restore-disks \
 - ✅ OpenClaw configuration
 - ✅ Secrets in /etc/openclaw/.env
 - ✅ System packages and libraries
-
-**What's NOT in VM backup:**
-- ❌ User data in /workspace (stored in Azure Files - separate backup)
-
-### Azure Files Backup (User Data)
-
-Azure Files (mounted at `/workspace`) has its own backup:
-- Enabled automatically during deployment
-- Snapshot-based (instant)
-- 30-day retention (default)
-
-**Restore user data:**
-
-1. Azure Portal → Storage Accounts → (your storage account)
-2. File shares → openclaw-data
-3. Click **Restore share**
-4. Select snapshot (date/time)
-5. Restore to new share or overwrite existing
 
 ---
 
@@ -559,24 +541,6 @@ az vm run-command invoke \
   --scripts 'systemctl status openclaw'
 ```
 
-### Azure Files Not Mounted
-
-```bash
-# Check mount status
-az vm run-command invoke \
-  --resource-group openclaw-mybot-vm-rg \
-  --name mybot-vm \
-  --command-id RunShellScript \
-  --scripts 'mount | grep workspace'
-
-# Re-mount manually
-az vm run-command invoke \
-  --resource-group openclaw-mybot-vm-rg \
-  --name mybot-vm \
-  --command-id RunShellScript \
-  --scripts '/usr/local/bin/mount-azure-files.sh'
-```
-
 ---
 
 ## Resource Cleanup
@@ -606,9 +570,8 @@ az group list --query "[?contains(name, 'openclaw') && contains(name, 'vm')].nam
 - 2 vCPU, 4 GB RAM
 - Premium SSD (30 GB)
 
-**Storage:** ~$5-10/month
-- Azure Files: $0.10/GB/month (100 GB = $10)
-- Backup: $0.10/GB/month (incremental)
+**Backup:** ~$5-10/month
+- VM backup: $0.10/GB/month (incremental)
 
 **Networking:** ~$1-2/month
 - Public IP: $0.005/hour (~$3.60/month)
@@ -630,16 +593,7 @@ Saves ~$20/month if VM off 12+ hours/day.
 ```
 Standard_B1s costs ~$10/month (vs $40 for B2s).
 
-**3. Reduce Storage Quota**
-```json
-// In parameters.json
-"storageShareQuota": {
-  "value": 10  // 10 GB instead of 100 GB
-}
-```
-Saves ~$9/month.
-
-**4. Reduce Backup Retention**
+**3. Reduce Backup Retention**
 ```json
 // In parameters.json
 "backupRetentionDays": {
@@ -648,7 +602,7 @@ Saves ~$9/month.
 ```
 Saves ~$5-10/month.
 
-**5. Delete Test Deployments**
+**4. Delete Test Deployments**
 ```bash
 # Don't forget to delete test resource groups!
 az group delete --name openclaw-test-rg --yes --no-wait

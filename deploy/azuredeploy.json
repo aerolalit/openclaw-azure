@@ -6,7 +6,7 @@
     "_generator": {
       "name": "OpenClaw Azure VM Template",
       "version": "1.0.0",
-      "description": "VM-based deployment with persistent storage, Azure Files, and full VM backup"
+      "description": "VM-based deployment with persistent storage and full VM backup"
     }
   },
   "parameters": {
@@ -177,15 +177,6 @@
         "description": "🔐 REQUIRED: Your IP address(es) for secure SSH and HTTPS access. Visit https://api.ipify.org to find your IP. Single IP: 79.237.146.142 | Multiple IPs: 79.237.146.142,79.237.146.143 (comma-separated, no spaces). Template automatically adds /32 notation."
       }
     },
-    "storageShareQuota": {
-      "type": "int",
-      "defaultValue": 100,
-      "minValue": 10,
-      "maxValue": 5120,
-      "metadata": {
-        "description": "Azure Files share quota in GB (10-5120). Stores user data persistently. Default 100 GB (~$5/month)."
-      }
-    },
     "backupRetentionDays": {
       "type": "int",
       "defaultValue": 7,
@@ -205,7 +196,6 @@
     "publicIpName": "[concat(variables('validatedAppName'), '-ip')]",
     "dnsLabel": "[concat(variables('validatedAppName'), '-', take(uniqueString(resourceGroup().id), 8))]",
     "vmFqdn": "[concat(variables('dnsLabel'), '.', parameters('location'), '.cloudapp.azure.com')]",
-    "storageAccountName": "[toLower(concat(take(variables('validatedAppName'), 8), take(uniqueString(resourceGroup().id), 15)))]",
     "recoveryVaultName": "[concat(variables('validatedAppName'), '-vault')]",
     "backupPolicyName": "DailyBackupPolicy",
     "hasDiscordToken": "[not(equals(parameters('discordBotToken'), ''))]",
@@ -253,43 +243,9 @@
         }
       }
     ],
-    "cloudInitScript": "[concat('#cloud-config\n\npackage_update: true\npackage_upgrade: true\n\npackages:\n  - curl\n  - jq\n  - cifs-utils\n  - ca-certificates\n  - gnupg\n  - lsb-release\n  - apt-transport-https\n  - build-essential\n  - python3\n  - python3-pip\n  - python3-venv\n  - git\n  - unzip\n\nwrite_files:\n  - path: /etc/openclaw/.env\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      DISCORD_BOT_TOKEN=', parameters('discordBotToken'), '\n      TELEGRAM_BOT_TOKEN=', parameters('telegramBotToken'), '\n      SLACK_BOT_TOKEN=', parameters('slackBotToken'), '\n      WHATSAPP_TOKEN=', parameters('whatsappToken'), '\n      ANTHROPIC_API_KEY=', parameters('anthropicApiKey'), '\n      OPENAI_API_KEY=', parameters('openaiApiKey'), '\n      GROQ_API_KEY=', parameters('groqApiKey'), '\n      COHERE_API_KEY=', parameters('cohereApiKey'), '\n      ELEVENLABS_API_KEY=', parameters('elevenlabsApiKey'), '\n      BRAVE_SEARCH_API_KEY=', parameters('braveSearchApiKey'), '\n      GITHUB_TOKEN=', parameters('githubToken'), '\n      NOTION_API_KEY=', parameters('notionApiKey'), '\n      OPENCLAW_GATEWAY_TOKEN=', variables('gatewayToken'), '\n      WEBHOOK_SECRET=', parameters('webhookSecret'), '\n      WORKSPACE_PATH=/workspace\n      NODE_ENV=production\n      OPENCLAW_AUTO_START=gateway\n      OPENCLAW_GATEWAY_PORT=18789\n      OPENCLAW_GATEWAY_AUTH_MODE=none\n      OPENCLAW_GATEWAY_BIND=lan\n      OPENCLAW_CHANNELS_TELEGRAM_DM_POLICY=trust\n      HOST=0.0.0.0\n\n  - path: /root/.openclaw/openclaw.json\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      {\"gateway\":{\"mode\":\"local\",\"trustedProxies\":[\"127.0.0.0/8\",\"100.100.0.0/16\",\"10.0.0.0/8\",\"172.16.0.0/12\",\"192.168.0.0/16\"],\"controlUi\":{\"allowInsecureAuth\":true,\"dangerouslyDisableDeviceAuth\":true}}}\n\n  - path: /etc/systemd/system/openclaw.service\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      [Unit]\n      Description=OpenClaw AI Assistant\n      After=network-online.target\n      Wants=network-online.target\n\n      [Service]\n      Type=simple\n      Environment=HOME=/root\n      EnvironmentFile=/etc/openclaw/.env\n      WorkingDirectory=/workspace\n      ExecStart=/usr/bin/openclaw gateway run --port 18789 --bind lan --allow-unconfigured\n      Restart=always\n      RestartSec=5\n      StandardOutput=journal\n      StandardError=journal\n\n      [Install]\n      WantedBy=multi-user.target\n\n  - path: /etc/caddy/Caddyfile\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      ', variables('vmFqdn'), ' {\n          reverse_proxy localhost:18789\n      }\n\nruncmd:\n  # Install Node.js 22 LTS via NodeSource\n  - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -\n  - apt-get install -y nodejs\n  # Install OpenClaw globally via npm\n  - npm install -g openclaw@latest\n  # Create workspace directory\n  - mkdir -p /workspace\n  # Ensure openclaw config directory exists\n  - mkdir -p /root/.openclaw\n  # Install Caddy for HTTPS reverse proxy\n  - curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/gpg.key | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg\n  - curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt | tee /etc/apt/sources.list.d/caddy-stable.list\n  - apt-get update\n  - DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::=--force-confold caddy\n  - systemctl enable caddy\n  - systemctl restart caddy\n  # Enable and start OpenClaw systemd service\n  - systemctl daemon-reload\n  - systemctl enable openclaw\n  - systemctl start openclaw\n\nfinal_message: \"OpenClaw VM setup complete! Node.js + Caddy HTTPS proxy running. Check: journalctl -u openclaw -n 50\"\n')]"
+    "cloudInitScript": "[concat('#cloud-config\n\npackage_update: true\npackage_upgrade: true\n\npackages:\n  - curl\n  - jq\n  - ca-certificates\n  - gnupg\n  - lsb-release\n  - apt-transport-https\n  - build-essential\n  - python3\n  - python3-pip\n  - python3-venv\n  - git\n  - unzip\n\nwrite_files:\n  - path: /etc/openclaw/.env\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      DISCORD_BOT_TOKEN=', parameters('discordBotToken'), '\n      TELEGRAM_BOT_TOKEN=', parameters('telegramBotToken'), '\n      SLACK_BOT_TOKEN=', parameters('slackBotToken'), '\n      WHATSAPP_TOKEN=', parameters('whatsappToken'), '\n      ANTHROPIC_API_KEY=', parameters('anthropicApiKey'), '\n      OPENAI_API_KEY=', parameters('openaiApiKey'), '\n      GROQ_API_KEY=', parameters('groqApiKey'), '\n      COHERE_API_KEY=', parameters('cohereApiKey'), '\n      ELEVENLABS_API_KEY=', parameters('elevenlabsApiKey'), '\n      BRAVE_SEARCH_API_KEY=', parameters('braveSearchApiKey'), '\n      GITHUB_TOKEN=', parameters('githubToken'), '\n      NOTION_API_KEY=', parameters('notionApiKey'), '\n      OPENCLAW_GATEWAY_TOKEN=', variables('gatewayToken'), '\n      WEBHOOK_SECRET=', parameters('webhookSecret'), '\n      NODE_ENV=production\n      OPENCLAW_AUTO_START=gateway\n      OPENCLAW_GATEWAY_PORT=18789\n      OPENCLAW_GATEWAY_AUTH_MODE=none\n      OPENCLAW_GATEWAY_BIND=lan\n      OPENCLAW_CHANNELS_TELEGRAM_DM_POLICY=trust\n      HOST=0.0.0.0\n\n  - path: /root/.openclaw/openclaw.json\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      {\"gateway\":{\"mode\":\"local\",\"trustedProxies\":[\"127.0.0.0/8\",\"100.100.0.0/16\",\"10.0.0.0/8\",\"172.16.0.0/12\",\"192.168.0.0/16\"],\"controlUi\":{\"allowInsecureAuth\":true,\"dangerouslyDisableDeviceAuth\":true}}}\n\n  - path: /etc/systemd/system/openclaw.service\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      [Unit]\n      Description=OpenClaw AI Assistant\n      After=network-online.target\n      Wants=network-online.target\n\n      [Service]\n      Type=simple\n      Environment=HOME=/root\n      EnvironmentFile=/etc/openclaw/.env\n      WorkingDirectory=/root\n      ExecStart=/usr/bin/openclaw gateway run --port 18789 --bind lan --allow-unconfigured\n      Restart=always\n      RestartSec=5\n      StandardOutput=journal\n      StandardError=journal\n\n      [Install]\n      WantedBy=multi-user.target\n\n  - path: /etc/caddy/Caddyfile\n    permissions: ''0644''\n    owner: root:root\n    content: |\n      ', variables('vmFqdn'), ' {\n          reverse_proxy localhost:18789\n      }\n\nruncmd:\n  # Install Node.js 22 LTS via NodeSource\n  - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -\n  - apt-get install -y nodejs\n  # Install OpenClaw globally via npm\n  - npm install -g openclaw@latest\n  # Ensure openclaw config directory exists\n  - mkdir -p /root/.openclaw\n  # Install Caddy for HTTPS reverse proxy\n  - curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/gpg.key | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg\n  - curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt | tee /etc/apt/sources.list.d/caddy-stable.list\n  - apt-get update\n  - DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::=--force-confold caddy\n  - systemctl enable caddy\n  - systemctl restart caddy\n  # Enable and start OpenClaw systemd service\n  - systemctl daemon-reload\n  - systemctl enable openclaw\n  - systemctl start openclaw\n\nfinal_message: \"OpenClaw VM setup complete! Node.js + Caddy HTTPS proxy running. Check: journalctl -u openclaw -n 50\"\n')]"
   },
   "resources": [
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2023-01-01",
-      "name": "[variables('storageAccountName')]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "Standard_LRS"
-      },
-      "kind": "StorageV2",
-      "properties": {
-        "allowBlobPublicAccess": false,
-        "minimumTlsVersion": "TLS1_2",
-        "supportsHttpsTrafficOnly": true,
-        "encryption": {
-          "services": {
-            "file": {
-              "enabled": true
-            }
-          },
-          "keySource": "Microsoft.Storage"
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
-      "apiVersion": "2023-01-01",
-      "name": "[concat(variables('storageAccountName'), '/default/openclaw-data')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
-      ],
-      "properties": {
-        "shareQuota": "[parameters('storageShareQuota')]"
-      }
-    },
     {
       "type": "Microsoft.RecoveryServices/vaults",
       "apiVersion": "2023-01-01",
@@ -411,8 +367,7 @@
       "name": "[variables('vmName')]",
       "location": "[parameters('location')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -524,13 +479,6 @@
       "value": "[resourceGroup().name]",
       "metadata": {
         "description": "Azure Resource Group containing your OpenClaw VM and resources"
-      }
-    },
-    "storageAccountName": {
-      "type": "string",
-      "value": "[variables('storageAccountName')]",
-      "metadata": {
-        "description": "Azure Storage Account for persistent user data"
       }
     },
     "recoveryVaultName": {
