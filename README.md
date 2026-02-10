@@ -159,14 +159,15 @@ Both token types work with OpenClaw!
 
 Estimated monthly costs (US East region):
 
-| Component          | Cost        | Description                      |
-| ------------------ | ----------- | -------------------------------- |
-| VM (Standard_B2s)  | $35-40      | 2 vCPU, 4 GB RAM, 30 GB SSD      |
-| VM Backup          | $5-10       | Daily backups (incremental)      |
-| Public IP          | $3-4        | Static IP with DNS               |
-| **Total**          | **~$43-54** | Varies by VM size                |
+| Component         | Cost        | Description                 |
+| ----------------- | ----------- | --------------------------- |
+| VM (Standard_B2s) | $35-40      | 2 vCPU, 4 GB RAM, 30 GB SSD |
+| VM Backup         | $5-10       | Daily backups (incremental) |
+| Public IP         | $3-4        | Static IP with DNS          |
+| **Total**         | **~$43-54** | Varies by VM size           |
 
 **Cost Tips:**
+
 - Use Standard_B1s for testing (~$10/month)
 - Enable auto-shutdown for dev environments (saves ~50%)
 - Use 7-day backup retention instead of 30 days
@@ -179,10 +180,10 @@ The deployment form is organized into clear sections:
 
 ### Bot Configuration
 
-| Parameter          | Description                          | Example           |
-| ------------------ | ------------------------------------ | ----------------- |
-| **App Name**       | Short name for your bot (3-12 chars) | `mybot`           |
-| **Confirm Tokens** | Required safety check                | Check this box    |
+| Parameter          | Description                          | Example        |
+| ------------------ | ------------------------------------ | -------------- |
+| **App Name**       | Short name for your bot (3-12 chars) | `mybot`        |
+| **Confirm Tokens** | Required safety check                | Check this box |
 
 ### Messaging Platform Tokens (At least one required)
 
@@ -318,6 +319,7 @@ Your deployment includes **automatic IP restriction** for enhanced security:
    - Enter it in the deployment form
 
 **What this protects against:**
+
 - Leaked gateway token in logs/screenshots → Attacker blocked (wrong IP)
 - Accidentally shared credentials → Recipient blocked (wrong IP)
 - Brute force attacks → Blocked at network layer (wrong IP)
@@ -328,11 +330,13 @@ Your deployment includes **automatic IP restriction** for enhanced security:
 **When your IP changes (home internet, VPN, etc.):**
 
 **Option 1 - Azure Portal:**
+
 ```
 Portal → Network Security Groups → [your-app]-nsg → Inbound security rules → Add
 ```
 
 **Option 2 - Azure CLI (Quick):**
+
 ```bash
 az network nsg rule create \
   --resource-group <your-resource-group> \
@@ -345,6 +349,7 @@ az network nsg rule create \
 ```
 
 **Option 3 - Add team member:**
+
 ```bash
 az network nsg rule create \
   --resource-group <your-resource-group> \
@@ -398,6 +403,7 @@ Packages persist across restarts and are included in daily backups.
 ### Backup and Restore
 
 Your VM is backed up daily at 2:00 AM UTC. Backups include:
+
 - OS disk with all configurations
 - Installed packages
 - Secrets in `/etc/openclaw/.env`
