@@ -169,13 +169,13 @@
         }
       },
       {
-        "name": "AllowBastionSSH",
+        "name": "AllowAzureInternalSSH",
         "properties": {
           "priority": 3900,
           "protocol": "Tcp",
           "access": "Allow",
           "direction": "Inbound",
-          "sourceAddressPrefix": "168.63.129.16/32",
+          "sourceAddressPrefix": "VirtualNetwork",
           "sourcePortRange": "*",
           "destinationAddressPrefix": "*",
           "destinationPortRange": "22"
