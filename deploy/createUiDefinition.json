@@ -77,7 +77,7 @@
             "type": "Microsoft.Common.InfoBox",
             "visible": true,
             "options": {
-              "text": "You'll chat with your AI assistant through Telegram. To set up: 1) Open Telegram and search for <b>@BotFather</b>, 2) Send <b>/newbot</b> and follow the prompts, 3) Copy the token it gives you and paste it below. <a href='https://github.com/aerolalit/openclaw-azure#telegram-setup' target='_blank'>Detailed guide</a>",
+              "text": "You'll chat with your AI assistant through Telegram. To set up: 1) Open Telegram and search for <b>@BotFather</b>, 2) Send <b>/newbot</b> and follow the prompts, 3) Copy the token it gives you and paste it below. To find your User ID, message <b>@userinfobot</b> on Telegram. <a href='https://github.com/aerolalit/openclaw-azure#telegram-setup' target='_blank'>Detailed guide</a>",
               "style": "Info"
             }
           },
