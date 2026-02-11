@@ -138,6 +138,28 @@
             }
           },
           {
+            "name": "adminUsername",
+            "type": "Microsoft.Common.TextBox",
+            "label": "VM Admin Username",
+            "toolTip": "Admin username for Serial Console emergency access (SSH is disabled). Default: azureadminuser",
+            "defaultValue": "azureadminuser",
+            "constraints": {
+              "required": true,
+              "regex": "^[a-z][a-z0-9_-]{1,31}$",
+              "validationMessage": "Must start with a lowercase letter, 2-32 characters, only lowercase letters, numbers, hyphens and underscores."
+            }
+          },
+          {
+            "name": "osDiskSizeGB",
+            "type": "Microsoft.Common.Slider",
+            "label": "OS Disk Size (GB)",
+            "toolTip": "OS disk size in GB. 30 GB is sufficient for most use cases. Increase if you need more storage for packages or data.",
+            "defaultValue": 30,
+            "min": 30,
+            "max": 256,
+            "showStepMarkers": false
+          },
+          {
             "name": "vmSize",
             "type": "Microsoft.Compute.SizeSelector",
             "label": "VM Size",
@@ -171,6 +193,8 @@
       "telegramBotToken": "[steps('messaging').telegramBotToken]",
       "telegramUserId": "[steps('messaging').telegramUserId]",
       "allowedIpAddresses": "[steps('security').allowedIpAddresses]",
+      "adminUsername": "[steps('security').adminUsername]",
+      "osDiskSizeGB": "[steps('security').osDiskSizeGB]",
       "vmSize": "[steps('security').vmSize]",
       "enableBackup": "[steps('security').enableBackup]"
     }
