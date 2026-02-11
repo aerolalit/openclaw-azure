@@ -21,7 +21,7 @@ Deploy your own private [OpenClaw](https://github.com/openclaw/openclaw) AI assi
 You'll need:
 
 1. **Azure Account** ([sign up free](https://azure.microsoft.com/free))
-2. **Telegram Bot Token** ([setup guide](#telegram-setup)) - from @BotFather
+2. **Telegram Bot Token** ([setup guide](#telegram-setup)) - from [@BotFather](https://t.me/BotFather)
 3. **Anthropic API Key** ([get yours here](https://console.anthropic.com)) - must start with `sk-ant-`
 
 ### Deploy to Azure
@@ -76,7 +76,7 @@ openclaw-azure/
 ### Telegram Setup
 
 1. **Start Chat with BotFather**
-   - Open Telegram and search for `@BotFather`
+   - Open Telegram and search for [@BotFather](https://t.me/BotFather)
    - Start a chat and type `/start`
 
 2. **Create Your Bot**
@@ -147,7 +147,7 @@ Parameters are configured in `deploy/parameters.json`:
 | **appName**          | Yes      | Short name for your bot (3-12 chars)                                                       | `mybot`            |
 | **location**         | Yes      | Azure region                                                                               | `westeurope`       |
 | **anthropicApiKey**  | Yes      | Anthropic Claude API key                                                                   | `sk-ant-api03-...` |
-| **telegramBotToken** | Yes      | Telegram bot token from @BotFather                                                         | `123456789:ABC...` |
+| **telegramBotToken** | Yes      | Telegram bot token from [@BotFather](https://t.me/BotFather)                               | `123456789:ABC...` |
 | **telegramUserId**   | No       | Your Telegram numeric user ID (message [@userinfobot](https://t.me/userinfobot) to get it) | `455368171`        |
 | **enableBackup**     | No       | Enable daily VM backups                                                                    | `false`            |
 
