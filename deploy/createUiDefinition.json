@@ -150,6 +150,16 @@
             }
           },
           {
+            "name": "osDiskSizeGB",
+            "type": "Microsoft.Common.Slider",
+            "label": "OS Disk Size (GB)",
+            "toolTip": "OS disk size in GB. 30 GB is sufficient for most use cases. Increase if you need more storage for packages or data.",
+            "defaultValue": 30,
+            "min": 30,
+            "max": 256,
+            "showStepMarkers": false
+          },
+          {
             "name": "vmSize",
             "type": "Microsoft.Compute.SizeSelector",
             "label": "VM Size",
@@ -184,6 +194,7 @@
       "telegramUserId": "[steps('messaging').telegramUserId]",
       "allowedIpAddresses": "[steps('security').allowedIpAddresses]",
       "adminUsername": "[steps('security').adminUsername]",
+      "osDiskSizeGB": "[steps('security').osDiskSizeGB]",
       "vmSize": "[steps('security').vmSize]",
       "enableBackup": "[steps('security').enableBackup]"
     }
