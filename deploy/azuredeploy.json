@@ -43,7 +43,7 @@
     },
     "adminUsername": {
       "type": "string",
-      "defaultValue": "azureuser",
+      "defaultValue": "azureadminuser",
       "metadata": {
         "description": "VM admin username (for Serial Console emergency access only, SSH is disabled)"
       }
@@ -412,6 +412,13 @@
       "value": "[parameters('gatewayToken')]",
       "metadata": {
         "description": "Gateway token for accessing OpenClaw Control UI. Copy this token and use it in the Control UI."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "value": "[parameters('adminUsername')]",
+      "metadata": {
+        "description": "VM admin username (for Serial Console emergency access)"
       }
     },
     "adminPassword": {

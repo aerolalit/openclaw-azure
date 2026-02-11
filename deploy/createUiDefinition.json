@@ -138,6 +138,18 @@
             }
           },
           {
+            "name": "adminUsername",
+            "type": "Microsoft.Common.TextBox",
+            "label": "VM Admin Username",
+            "toolTip": "Admin username for Serial Console emergency access (SSH is disabled). Default: azureadminuser",
+            "defaultValue": "azureadminuser",
+            "constraints": {
+              "required": true,
+              "regex": "^[a-z][a-z0-9_-]{1,31}$",
+              "validationMessage": "Must start with a lowercase letter, 2-32 characters, only lowercase letters, numbers, hyphens and underscores."
+            }
+          },
+          {
             "name": "vmSize",
             "type": "Microsoft.Compute.SizeSelector",
             "label": "VM Size",
@@ -171,6 +183,7 @@
       "telegramBotToken": "[steps('messaging').telegramBotToken]",
       "telegramUserId": "[steps('messaging').telegramUserId]",
       "allowedIpAddresses": "[steps('security').allowedIpAddresses]",
+      "adminUsername": "[steps('security').adminUsername]",
       "vmSize": "[steps('security').vmSize]",
       "enableBackup": "[steps('security').enableBackup]"
     }
