@@ -8,7 +8,7 @@ Deploy your own private [OpenClaw](https://github.com/openclaw/openclaw) AI assi
 
 ### Demo
 
-https://github.com/aerolalit/openclaw-azure/raw/main/docs/deploy-demo.mov
+<video src="https://github.com/aerolalit/openclaw-azure/raw/main/docs/deploy-demo.mov" controls autoplay muted loop width="100%"></video>
 
 ## What You Get
 
