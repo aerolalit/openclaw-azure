@@ -6,6 +6,10 @@ Deploy your own private [OpenClaw](https://github.com/openclaw/openclaw) AI assi
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Faerolalit%2Fopenclaw-azure%2Fmain%2Fdeploy%2Fazuredeploy.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Faerolalit%2Fopenclaw-azure%2Fmain%2Fdeploy%2FcreateUiDefinition.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a>
 
+### Demo
+
+https://github.com/aerolalit/openclaw-azure/raw/main/docs/deploy-demo.mov
+
 ## What You Get
 
 - **Private AI Bot** for Telegram powered by Anthropic Claude
